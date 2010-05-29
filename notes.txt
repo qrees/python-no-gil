@@ -1,0 +1,3 @@
+gcc -E Python/thread.c -IInclude -I./ 2>&1 | less
+PyRun_SimpleFileExFlags
+PyRun_FileExFlags

@@ -1318,6 +1318,7 @@ PyRun_FileExFlags(FILE *fp, const char *filename, int start, PyObject *globals,
 		PyArena_Free(arena);
 		return NULL;
 	}
+	printf("Running: %s\n", filename);
 	ret = run_mod(mod, filename, globals, locals, flags, arena);
 	PyArena_Free(arena);
 	return ret;

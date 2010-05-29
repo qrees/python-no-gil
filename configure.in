@@ -628,7 +628,7 @@ AC_SUBST(LINKCC)
 AC_MSG_CHECKING(LINKCC)
 if test -z "$LINKCC"
 then
-	LINKCC='$(PURIFY) $(MAINCC)'
+	LINKCC='$(PURIFY) $(CXX)'
 	case $ac_sys_system in
 	AIX*)
 	   exp_extra="\"\""

@@ -881,7 +881,7 @@ class PyBuildExt(build_ext):
             db_incs = None
             dblibs = []
             dblib_dir = None
-            missing.append('_bsddb')
+            #missing.append('_bsddb')
 
         # The sqlite interface
         sqlite_setup_debug = False   # verbose debug prints from this script?
@@ -1007,7 +1007,8 @@ class PyBuildExt(build_ext):
             else:
                 missing.append('bsddb185')
         else:
-            missing.append('bsddb185')
+            pass
+            #missing.append('bsddb185')
 
         # The standard Unix dbm module:
         if platform not in ['cygwin']:
@@ -1347,7 +1348,8 @@ class PyBuildExt(build_ext):
             # SunOS specific modules
             exts.append( Extension('sunaudiodev', ['sunaudiodev.c']) )
         else:
-            missing.append('sunaudiodev')
+            pass
+            #missing.append('sunaudiodev')
 
         if platform == 'darwin':
             # _scproxy

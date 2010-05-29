@@ -227,30 +227,31 @@ PyEval_InitThreads(void)
 	if (interpreter_lock)
 		return;
 	interpreter_lock = PyThread_allocate_lock();
-	PyThread_acquire_lock(interpreter_lock, 1);
+	//PyThread_acquire_lock(interpreter_lock, 1);
 	main_thread = PyThread_get_thread_ident();
 }
 
 void
 PyEval_AcquireLock(void)
 {
-	PyThread_acquire_lock(interpreter_lock, 1);
+	//PyThread_acquire_lock(interpreter_lock, 1);
 }
 
 void
 PyEval_ReleaseLock(void)
 {
-	PyThread_release_lock(interpreter_lock);
+	//PyThread_release_lock(interpreter_lock);
 }
 
 void
 PyEval_AcquireThread(PyThreadState *tstate)
 {
+	//printf("PyEval_AcquireThread %p\n", tstate);
 	if (tstate == NULL)
 		Py_FatalError("PyEval_AcquireThread: NULL new thread state");
 	/* Check someone has called PyEval_InitThreads() to create the lock */
 	assert(interpreter_lock);
-	PyThread_acquire_lock(interpreter_lock, 1);
+	//PyThread_acquire_lock(interpreter_lock, 1);
 	if (PyThreadState_Swap(tstate) != NULL)
 		Py_FatalError(
 			"PyEval_AcquireThread: non-NULL old thread state");
@@ -259,11 +260,12 @@ PyEval_AcquireThread(PyThreadState *tstate)
 void
 PyEval_ReleaseThread(PyThreadState *tstate)
 {
+	//printf("PyEval_ReleaseThread %p\n", tstate);
 	if (tstate == NULL)
 		Py_FatalError("PyEval_ReleaseThread: NULL thread state");
 	if (PyThreadState_Swap(NULL) != tstate)
 		Py_FatalError("PyEval_ReleaseThread: wrong thread state");
-	PyThread_release_lock(interpreter_lock);
+	//PyThread_release_lock(interpreter_lock);
 }
 
 /* This function is called from PyOS_AfterFork to ensure that newly
@@ -284,7 +286,7 @@ PyEval_ReInitThreads(void)
 	  adding a new function to each thread_*.h.  Instead, just
 	  create a new lock and waste a little bit of memory */
 	interpreter_lock = PyThread_allocate_lock();
-	PyThread_acquire_lock(interpreter_lock, 1);
+	//PyThread_acquire_lock(interpreter_lock, 1);
 	main_thread = PyThread_get_thread_ident();
 
 	/* Update the threading module with the new state.
@@ -313,12 +315,13 @@ PyEval_ReInitThreads(void)
 PyThreadState *
 PyEval_SaveThread(void)
 {
+	//printf("PyEval_SaveThread\n");
 	PyThreadState *tstate = PyThreadState_Swap(NULL);
 	if (tstate == NULL)
 		Py_FatalError("PyEval_SaveThread: NULL tstate");
 #ifdef WITH_THREAD
-	if (interpreter_lock)
-		PyThread_release_lock(interpreter_lock);
+	//if (interpreter_lock)
+	//	PyThread_release_lock(interpreter_lock);
 #endif
 	return tstate;
 }
@@ -326,12 +329,13 @@ PyEval_SaveThread(void)
 void
 PyEval_RestoreThread(PyThreadState *tstate)
 {
+	//printf("PyEval_RestoreThread %p\n", tstate);
 	if (tstate == NULL)
 		Py_FatalError("PyEval_RestoreThread: NULL tstate");
 #ifdef WITH_THREAD
 	if (interpreter_lock) {
 		int err = errno;
-		PyThread_acquire_lock(interpreter_lock, 1);
+		//PyThread_acquire_lock(interpreter_lock, 1);
 		errno = err;
 	}
 #endif
@@ -791,11 +795,11 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 	assert(stack_pointer != NULL);
 	f->f_stacktop = NULL;	/* remains NULL unless yield suspends frame */
 
-#ifdef LLTRACE
-	lltrace = PyDict_GetItemString(f->f_globals, "__lltrace__") != NULL;
-#endif
 #if defined(Py_DEBUG) || defined(LLTRACE)
 	filename = PyString_AsString(co->co_filename);
+#endif
+#ifdef LLTRACE
+	lltrace = PyDict_GetItemString(f->f_globals, "__lltrace__") != NULL;
 #endif
 
 	why = WHY_NOT;

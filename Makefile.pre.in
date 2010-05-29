@@ -57,7 +57,9 @@ MAKESETUP=      $(srcdir)/Modules/makesetup
 # Compiler options
 OPT=		@OPT@
 BASECFLAGS=	@BASECFLAGS@
+BASECXXFLAGS=    -fno-strict-aliasing -fwrapv -Wall
 CFLAGS=		$(BASECFLAGS) $(OPT) $(EXTRA_CFLAGS)
+CXXFLAGS=   $(BASECXXFLAGS) $(OPT) $(EXTRA_CXXFLAGS)
 # Both CPPFLAGS and LDFLAGS need to contain the shell's value for setup.py to
 # be able to build extension modules using the directories specified in the
 # environment variables
@@ -71,6 +73,7 @@ LINKFORSHARED=	@LINKFORSHARED@
 CFLAGSFORSHARED=@CFLAGSFORSHARED@
 # C flags used for building the interpreter object files
 PY_CFLAGS=	$(CFLAGS) $(CPPFLAGS) $(CFLAGSFORSHARED) -DPy_BUILD_CORE
+PY_CXXFLAGS=    $(CXXFLAGS) $(CPPFLAGS) $(CFLAGSFORSHARED) -DPy_BUILD_CORE -Wno-write-strings
 
 
 # Machine-dependent subdirectories
@@ -576,6 +579,9 @@ Python/formatter_unicode.o: $(srcdir)/Python/formatter_unicode.c \
 
 Python/formatter_string.o: $(srcdir)/Python/formatter_string.c \
 				$(STRINGLIB_HEADERS)
+
+Python/pystate.o: $(srcdir)/Python/pystate.cpp $(srcdir)/Include/pythread.h
+	$(CXX) -c $(PY_CXXFLAGS) -o $@ $<
 
 ############################################################################
 # Header files

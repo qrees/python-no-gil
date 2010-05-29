@@ -5,6 +5,11 @@
 #include "structmember.h"
 #include "bytes_methods.h"
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static PyByteArrayObject *nullbytes = NULL;
 
 void
@@ -114,7 +119,7 @@ static int
 bytes_getbuffer(PyByteArrayObject *obj, Py_buffer *view, int flags)
 {
         int ret;
-        void *ptr;
+        char *ptr;
         if (view == NULL) {
                 obj->ob_exports++;
                 return 0;
@@ -177,7 +182,7 @@ PyByteArray_FromObject(PyObject *input)
 PyObject *
 PyByteArray_FromStringAndSize(const char *bytes, Py_ssize_t size)
 {
-    PyByteArrayObject *new;
+    PyByteArrayObject *new_;
     Py_ssize_t alloc;
 
     if (size < 0) {
@@ -186,30 +191,30 @@ PyByteArray_FromStringAndSize(const char *bytes, Py_ssize_t size)
         return NULL;
     }
 
-    new = PyObject_New(PyByteArrayObject, &PyByteArray_Type);
-    if (new == NULL)
+    new_ = PyObject_New(PyByteArrayObject, &PyByteArray_Type);
+    if (new_ == NULL)
         return NULL;
 
     if (size == 0) {
-        new->ob_bytes = NULL;
+        new_->ob_bytes = NULL;
         alloc = 0;
     }
     else {
         alloc = size + 1;
-        new->ob_bytes = PyMem_Malloc(alloc);
-        if (new->ob_bytes == NULL) {
-            Py_DECREF(new);
+        new_->ob_bytes = (char*)PyMem_Malloc(alloc);
+        if (new_->ob_bytes == NULL) {
+            Py_DECREF(new_);
             return PyErr_NoMemory();
         }
         if (bytes != NULL)
-            memcpy(new->ob_bytes, bytes, size);
-        new->ob_bytes[size] = '\0';  /* Trailing null byte */
+            memcpy(new_->ob_bytes, bytes, size);
+        new_->ob_bytes[size] = '\0';  /* Trailing null byte */
     }
-    Py_SIZE(new) = size;
-    new->ob_alloc = alloc;
-    new->ob_exports = 0;
+    Py_SIZE(new_) = size;
+    new_->ob_alloc = alloc;
+    new_->ob_exports = 0;
 
-    return (PyObject *)new;
+    return (PyObject *)new_;
 }
 
 Py_ssize_t
@@ -272,7 +277,7 @@ PyByteArray_Resize(PyObject *self, Py_ssize_t size)
         return -1;
     }
 
-    ((PyByteArrayObject *)self)->ob_bytes = sval;
+    ((PyByteArrayObject *)self)->ob_bytes = (char*)sval;
     Py_SIZE(self) = size;
     ((PyByteArrayObject *)self)->ob_alloc = alloc;
     ((PyByteArrayObject *)self)->ob_bytes[size] = '\0'; /* Trailing null byte */
@@ -538,7 +543,7 @@ bytes_setslice(PyByteArrayObject *self, Py_ssize_t lo, Py_ssize_t hi,
               0   lo               hi               old_size
               |   |<----avail----->|<-----tomove------>|
               |   |<-needed->|<-----tomove------>|
-              0   lo      new_hi              new_size
+              0   lo      new__hi              new_size
             */
             memmove(self->ob_bytes + lo + needed, self->ob_bytes + hi,
                     Py_SIZE(self) - hi);
@@ -784,7 +789,7 @@ bytes_init(PyByteArrayObject *self, PyObject *args, PyObject *kwds)
     }
 
     if (PyBytes_Check(arg)) {
-        PyObject *new, *encoded;
+        PyObject *new_, *encoded;
         if (encoding != NULL) {
             encoded = PyCodec_Encode(arg, encoding, errors);
             if (encoded == NULL)
@@ -795,17 +800,17 @@ bytes_init(PyByteArrayObject *self, PyObject *args, PyObject *kwds)
             encoded = arg;
             Py_INCREF(arg);
         }
-        new = bytes_iconcat(self, arg);
+        new_ = bytes_iconcat(self, arg);
         Py_DECREF(encoded);
-        if (new == NULL)
+        if (new_ == NULL)
             return -1;
-        Py_DECREF(new);
+        Py_DECREF(new_);
         return 0;
     }
 
     if (PyUnicode_Check(arg)) {
         /* Encode via the codec registry */
-        PyObject *encoded, *new;
+        PyObject *encoded, *new_;
         if (encoding == NULL) {
             PyErr_SetString(PyExc_TypeError,
                             "unicode argument without an encoding");
@@ -815,11 +820,11 @@ bytes_init(PyByteArrayObject *self, PyObject *args, PyObject *kwds)
         if (encoded == NULL)
             return -1;
         assert(PyBytes_Check(encoded));
-        new = bytes_iconcat(self, encoded);
+        new_ = bytes_iconcat(self, encoded);
         Py_DECREF(encoded);
-        if (new == NULL)
+        if (new_ == NULL)
             return -1;
-        Py_DECREF(new);
+        Py_DECREF(new_);
         return 0;
     }
 
@@ -2350,14 +2355,14 @@ make_nullbytes_unique(PyObject *result)
         assert(PyTuple_GET_SIZE(result) == 3);
         for (i = 0; i < 3; i++) {
             if (PyTuple_GET_ITEM(result, i) == (PyObject *)nullbytes) {
-                PyObject *new = PyByteArray_FromStringAndSize(NULL, 0);
-                if (new == NULL) {
+                PyObject *new_ = PyByteArray_FromStringAndSize(NULL, 0);
+                if (new_ == NULL) {
                     Py_DECREF(result);
                     result = NULL;
                     break;
                 }
                 Py_DECREF(nullbytes);
-                PyTuple_SET_ITEM(result, i, new);
+                PyTuple_SET_ITEM(result, i, new_);
             }
         }
     }
@@ -3399,3 +3404,7 @@ bytes_iter(PyObject *seq)
     _PyObject_GC_TRACK(it);
     return (PyObject *)it;
 }
+
+#ifdef __cplusplus
+}
+#endif

@@ -3968,10 +3968,7 @@ DLLLIBRARY=''
 LDLIBRARYDIR=''
 RUNSHARED=''
 
-# LINKCC is the command that links the python executable -- default is $(CC).
-# If CXX is set, and if it is needed to link a main function that was
-# compiled with CXX, LINKCC is CXX instead. Always using CXX is undesirable:
-# python might then depend on the C++ runtime
+# LINKCC is the command that links the python executable -- default is $(CXX).
 # This is altered for AIX in order to build the export list before
 # linking.
 
@@ -3979,7 +3976,7 @@ RUNSHARED=''
 echo $ECHO_N "checking LINKCC... $ECHO_C" >&6; }
 if test -z "$LINKCC"
 then
-	LINKCC='$(PURIFY) $(MAINCC)'
+	LINKCC='$(PURIFY) $(CXX)'
 	case $ac_sys_system in
 	AIX*)
 	   exp_extra="\"\""
