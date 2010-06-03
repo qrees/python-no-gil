@@ -2340,7 +2340,7 @@ PyFile_WriteObject(PyObject *v, PyObject *f, int flags)
 			return -1;
 		}
 #ifdef Py_USING_UNICODE
-                if ((flags & Py_PRINT_RAW) &&
+		if ((flags & Py_PRINT_RAW) &&
 		    PyUnicode_Check(v) && enc != Py_None) {
 			char *cenc = PyString_AS_STRING(enc);
 			char *errors = fobj->f_errors == Py_None ? 

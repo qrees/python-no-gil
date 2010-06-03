@@ -252,19 +252,18 @@ PyEval_AcquireThread(PyThreadState *tstate)
 	/* Check someone has called PyEval_InitThreads() to create the lock */
 	assert(interpreter_lock);
 	//PyThread_acquire_lock(interpreter_lock, 1);
-	if (PyThreadState_Swap(tstate) != NULL)
-		Py_FatalError(
-			"PyEval_AcquireThread: non-NULL old thread state");
+	//if (PyThreadState_Swap(tstate) != NULL)
+	//	Py_FatalError(
+	//		"PyEval_AcquireThread: non-NULL old thread state");
 }
 
 void
 PyEval_ReleaseThread(PyThreadState *tstate)
 {
-	//printf("PyEval_ReleaseThread %p\n", tstate);
-	if (tstate == NULL)
-		Py_FatalError("PyEval_ReleaseThread: NULL thread state");
-	if (PyThreadState_Swap(NULL) != tstate)
-		Py_FatalError("PyEval_ReleaseThread: wrong thread state");
+	//if (tstate == NULL)
+	//	Py_FatalError("PyEval_ReleaseThread: NULL thread state");
+	//if (PyThreadState_Swap(NULL) != tstate)
+	//	Py_FatalError("PyEval_ReleaseThread: wrong thread state");
 	//PyThread_release_lock(interpreter_lock);
 }
 
@@ -316,20 +315,20 @@ PyThreadState *
 PyEval_SaveThread(void)
 {
 	//printf("PyEval_SaveThread\n");
-	PyThreadState *tstate = PyThreadState_Swap(NULL);
-	if (tstate == NULL)
-		Py_FatalError("PyEval_SaveThread: NULL tstate");
+	//PyThreadState *tstate = PyThreadState_Swap(NULL);
+	//if (tstate == NULL)
+	//	Py_FatalError("PyEval_SaveThread: NULL tstate");
 #ifdef WITH_THREAD
 	//if (interpreter_lock)
 	//	PyThread_release_lock(interpreter_lock);
 #endif
-	return tstate;
+	return NULL;
+	//return tstate;
 }
 
 void
 PyEval_RestoreThread(PyThreadState *tstate)
-{
-	//printf("PyEval_RestoreThread %p\n", tstate);
+{/*
 	if (tstate == NULL)
 		Py_FatalError("PyEval_RestoreThread: NULL tstate");
 #ifdef WITH_THREAD
@@ -340,6 +339,7 @@ PyEval_RestoreThread(PyThreadState *tstate)
 	}
 #endif
 	PyThreadState_Swap(tstate);
+	*/
 }
 
 
@@ -868,15 +868,15 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 			if (interpreter_lock) {
 				/* Give another thread a chance */
 
-				if (PyThreadState_Swap(NULL) != tstate)
-					Py_FatalError("ceval: tstate mix-up");
+				//if (PyThreadState_Swap(NULL) != tstate)
+				//	Py_FatalError("ceval: tstate mix-up");
 				PyThread_release_lock(interpreter_lock);
 
 				/* Other threads may run now */
 
 				PyThread_acquire_lock(interpreter_lock, 1);
-				if (PyThreadState_Swap(tstate) != NULL)
-					Py_FatalError("ceval: orphan tstate");
+				//if (PyThreadState_Swap(tstate) != NULL)
+				//	Py_FatalError("ceval: orphan tstate");
 
 				/* Check for thread interrupts */
 

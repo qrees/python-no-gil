@@ -35,9 +35,6 @@ static PyThread_type_lock head_mutex = NULL; /* Protects interp->tstate_head */
 
 map<pthread_t, PyThreadState *> _ThreadsStates;
 
-
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,7 +52,7 @@ static int autoTLSkey = 0;
 
 static PyInterpreterState *interp_head = NULL;
 
-PyThreadState *_PyThreadState_Current = NULL;
+//PyThreadState *_PyThreadState_Current = NULL;
 PyThreadFrameGetter _PyThreadState_GetFrame = NULL;
 
 #ifdef WITH_THREAD
@@ -171,6 +168,10 @@ PyThreadState_New(PyInterpreterState *interp)
 		_PyThreadState_GetFrame = threadstate_getframe;
 
 	if (tstate != NULL) {
+
+		pthread_t tid = pthread_self();
+		_ThreadsStates[tid] = tstate;
+
 		tstate->interp = interp;
 
 		tstate->frame = NULL;
@@ -284,8 +285,8 @@ tstate_delete_common(PyThreadState *tstate)
 void
 PyThreadState_Delete(PyThreadState *tstate)
 {
-	if (tstate == _PyThreadState_Current)
-		Py_FatalError("PyThreadState_Delete: tstate is still current");
+	//if (tstate == _PyThreadState_Current)
+	//	Py_FatalError("PyThreadState_Delete: tstate is still current");
 	tstate_delete_common(tstate);
 #ifdef WITH_THREAD
 	if (autoTLSkey && PyThread_get_key_value(autoTLSkey) == tstate)
@@ -298,11 +299,13 @@ PyThreadState_Delete(PyThreadState *tstate)
 void
 PyThreadState_DeleteCurrent()
 {
-	PyThreadState *tstate = _PyThreadState_Current;
+	pthread_t tid = pthread_self();
+	//return _ThreadsStates[tid];
+	PyThreadState *tstate = _ThreadsStates[tid];
 	if (tstate == NULL)
 		Py_FatalError(
 			"PyThreadState_DeleteCurrent: no current tstate");
-	_PyThreadState_Current = NULL;
+	//_PyThreadState_Current = NULL;
 	tstate_delete_common(tstate);
 	if (autoTLSkey && PyThread_get_key_value(autoTLSkey) == tstate)
 		PyThread_delete_key_value(autoTLSkey);
@@ -314,35 +317,25 @@ PyThreadState_DeleteCurrent()
 PyThreadState *
 PyThreadState_Get(void)
 {
-	if (_PyThreadState_Current == NULL)
-		Py_FatalError("PyThreadState_Get: no current thread");
+	//if (_PyThreadState_Current == NULL)
+	//	Py_FatalError("PyThreadState_Get: no current thread");
 
+	pthread_t tid = pthread_self();
+	return _ThreadsStates[tid];
+	//printf("Current thread: %p, tid: %i, map[id]: %p\n", _PyThreadState_Current, tid, _ThreadsStates[tid]);
 	return _PyThreadState_Current;
 }
-
 
 PyThreadState *
 PyThreadState_Swap(PyThreadState *newts)
 {
-	PyThreadState *oldts = _PyThreadState_Current;
 
-	_PyThreadState_Current = newts;
-	/* It should not be possible for more than one thread state
-	   to be used for a thread.  Check this the best we can in debug
-	   builds.
-	*/
-#if defined(Py_DEBUG) && defined(WITH_THREAD)
-	if (newts) {
-		/* This can be called from PyEval_RestoreThread(). Similar
-		   to it, we need to ensure errno doesn't change.
-		*/
-		int err = errno;
-		PyThreadState *check = PyGILState_GetThisThreadState();
-		if (check && check->interp == newts->interp && check != newts)
-			Py_FatalError("Invalid thread state for this thread");
-		errno = err;
-	}
-#endif
+	pthread_t tid = pthread_self();
+
+	PyThreadState *oldts = _ThreadsStates[tid];
+
+	_ThreadsStates[tid] = newts;
+
 	return oldts;
 }
 
@@ -355,16 +348,19 @@ PyThreadState_Swap(PyThreadState *newts)
 PyObject *
 PyThreadState_GetDict(void)
 {
-	if (_PyThreadState_Current == NULL)
+	pthread_t tid = pthread_self();
+	PyThreadState *tstate = _ThreadsStates[tid];
+
+	if (tstate == NULL)
 		return NULL;
 
-	if (_PyThreadState_Current->dict == NULL) {
+	if (tstate->dict == NULL) {
 		PyObject *d;
-		_PyThreadState_Current->dict = d = PyDict_New();
+		tstate->dict = d = PyDict_New();
 		if (d == NULL)
 			PyErr_Clear();
 	}
-	return _PyThreadState_Current->dict;
+	return tstate->dict;
 }
 
 
@@ -502,7 +498,8 @@ PyThreadState_IsCurrent(PyThreadState *tstate)
 	/* On Windows at least, simple reads and writes to 32 bit values
 	   are atomic.
 	*/
-	return tstate == _PyThreadState_Current;
+	return true;
+	//return tstate == _PyThreadState_Current;
 }
 
 /* Internal initialization/finalization functions called by

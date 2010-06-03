@@ -74,6 +74,47 @@ _Py_AddToAllObjects(PyObject *op, int force)
 }
 #endif	/* Py_TRACE_REFS */
 
+
+/*
+ * Atomic reference counting
+ */
+static inline 
+unsigned int efao_fetch_and_add32(volatile unsigned int *p, unsigned int add) {
+        unsigned int ret;
+        __asm__ __volatile__ ("lock; xaddl %0, %1" :
+                        "=r" (ret), "=m" (*p) : "0" (add), "m" (*p)
+                        : "memory");
+        return ret;
+}
+
+#define LOCK_PREFIX "lock ; "
+
+static inline void atomic_add(volatile PyObject* op, int i) {
+	asm volatile(
+			LOCK_PREFIX "addl %1,%0"
+                :"=m" (op->ob_refcnt)
+                :"ir" (i), "m" (op->ob_refcnt));
+}
+
+
+static inline void atomic_sub( volatile PyObject* op, int i) {
+   asm volatile(
+		   LOCK_PREFIX "subl %1,%0"
+                 :"=m" (op->ob_refcnt)
+                 :"ir" (i), "m" (op->ob_refcnt));
+}
+
+
+Py_ssize_t _Py_AtomicAdd(PyObject* op){
+	atomic_add(op, 1);
+	return op->ob_refcnt;
+}
+
+Py_ssize_t _Py_AtomicSub(PyObject* op){
+	atomic_sub(op, 1);
+	return op->ob_refcnt;
+}
+
 #ifdef COUNT_ALLOCS
 static PyTypeObject *type_list;
 /* All types are added to type_list, at least when

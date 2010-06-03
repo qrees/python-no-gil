@@ -65,9 +65,10 @@ whose size is determined when the object is allocated.
 /* Define pointers to support a doubly-linked list of all live heap objects. */
 #define _PyObject_HEAD_EXTRA		\
 	struct _object *_ob_next;	\
-	struct _object *_ob_prev;
+	struct _object *_ob_prev;	\
+	pthread_t tid;
 
-#define _PyObject_EXTRA_INIT 0, 0,
+#define _PyObject_EXTRA_INIT 0, 0, 0, 
 
 #else
 #define _PyObject_HEAD_EXTRA
@@ -689,7 +690,7 @@ PyAPI_FUNC(PyObject *) _PySet_Dummy(void);
 PyAPI_FUNC(Py_ssize_t) _Py_GetRefTotal(void);
 #define _Py_INC_REFTOTAL	_Py_RefTotal++
 #define _Py_DEC_REFTOTAL	_Py_RefTotal--
-#define _Py_REF_DEBUG_COMMA	,
+#define _Py_REF_DEBUG_COMMA ,
 #define _Py_CHECK_REFCNT(OP)					\
 {	if (((PyObject*)OP)->ob_refcnt < 0)				\
 		_Py_NegativeRefcount(__FILE__, __LINE__,	\
@@ -741,13 +742,17 @@ PyAPI_FUNC(void) _Py_AddToAllObjects(PyObject *, int force);
 	(*Py_TYPE(op)->tp_dealloc)((PyObject *)(op)))
 #endif /* !Py_TRACE_REFS */
 
+Py_ssize_t _Py_AtomicAdd(PyObject* op);
+
+Py_ssize_t _Py_AtomicSub(PyObject* op);
+
 #define Py_INCREF(op) (				\
 	_Py_INC_REFTOTAL  _Py_REF_DEBUG_COMMA	\
-	((PyObject*)(op))->ob_refcnt++)
+	(_Py_AtomicAdd((PyObject *)op)))
 
 #define Py_DECREF(op)					\
-	if (_Py_DEC_REFTOTAL  _Py_REF_DEBUG_COMMA	\
-	    --((PyObject*)(op))->ob_refcnt != 0)		\
+	if (_Py_DEC_REFTOTAL _Py_REF_DEBUG_COMMA	\
+		_Py_AtomicSub((PyObject *)op) != 0)		\
 		_Py_CHECK_REFCNT(op)			\
 	else						\
 		_Py_Dealloc((PyObject *)(op))
