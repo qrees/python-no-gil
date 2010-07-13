@@ -78,16 +78,22 @@ _Py_AddToAllObjects(PyObject *op, int force)
 /*
  * Atomic reference counting
  */
-static inline 
-unsigned int efao_fetch_and_add32(volatile unsigned int *p, unsigned int add) {
-        unsigned int ret;
-        __asm__ __volatile__ ("lock; xaddl %0, %1" :
-                        "=r" (ret), "=m" (*p) : "0" (add), "m" (*p)
-                        : "memory");
-        return ret;
+#define LOCK_PREFIX "lock ; "
+
+inline void _atomic_add(volatile int* op, int i) {
+	asm volatile(
+			LOCK_PREFIX "addl %1,%0"
+                :"=m" (*op)
+                :"ir" (i), "m" (*op));
 }
 
-#define LOCK_PREFIX "lock ; "
+
+inline void _atomic_sub(volatile int*  op, int i) {
+   asm volatile(
+		   LOCK_PREFIX "subl %1,%0"
+                 :"=m" (*op)
+                 :"ir" (i), "m" (*op));
+};
 
 static inline void atomic_add(volatile PyObject* op, int i) {
 	asm volatile(
@@ -112,7 +118,10 @@ Py_ssize_t _Py_AtomicAdd(PyObject* op){
 
 Py_ssize_t _Py_AtomicSub(PyObject* op){
 	atomic_sub(op, 1);
-	return op->ob_refcnt;
+	//if(op->ob_refcnt != 0)
+	//	_Py_CHECK_REFCNT(op)
+	//else
+	//	_Py_Dealloc(op);
 }
 
 #ifdef COUNT_ALLOCS
@@ -275,23 +284,61 @@ PyObject_InitVar(PyVarObject *op, PyTypeObject *tp, Py_ssize_t size)
 
 PyObject *
 _PyObject_New(PyTypeObject *tp)
-{
-	PyObject *op;
-	op = (PyObject *) PyObject_MALLOC(_PyObject_SIZE(tp));
-	if (op == NULL)
-		return PyErr_NoMemory();
-	return PyObject_INIT(op, tp);
+{	
+	PyObject *obj;
+	const size_t size = _PyObject_SIZE(tp);
+	/* note that we need to add one, for the sentinel */
+
+	obj = _PyObject_GC_Malloc(size);
+
+	if (obj == NULL)
+		return (PyVarObject *)PyErr_NoMemory();
+
+	//memset(obj, '\0', size);
+
+	if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
+		Py_INCREF(tp);
+
+	PyObject_INIT(obj, tp);
+
+	PyObject_GC_Track(obj);
+	return obj;
 }
 
 PyVarObject *
 _PyObject_NewVar(PyTypeObject *tp, Py_ssize_t nitems)
 {
-	PyVarObject *op;
+	/*PyVarObject *op;
 	const size_t size = _PyObject_VAR_SIZE(tp, nitems);
 	op = (PyVarObject *) PyObject_MALLOC(size);
 	if (op == NULL)
 		return (PyVarObject *)PyErr_NoMemory();
 	return PyObject_INIT_VAR(op, tp, nitems);
+	*/
+	/*
+	 * Always use garbage collector
+	 */
+	PyObject *obj;
+	const size_t size = _PyObject_VAR_SIZE(tp, nitems+1);
+	/* note that we need to add one, for the sentinel */
+
+	obj = _PyObject_GC_Malloc(size);
+
+	if (obj == NULL)
+		return (PyVarObject *)PyErr_NoMemory();
+
+	memset(obj, '\0', size);
+
+	if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
+		Py_INCREF(tp);
+
+	if (tp->tp_itemsize == 0)
+		PyObject_INIT(obj, tp);
+	else
+		(void) PyObject_INIT_VAR((PyVarObject *)obj, tp, nitems);
+
+	PyObject_GC_Track(obj);
+	return obj;
 }
 
 /* for binary compatibility with 2.2 */

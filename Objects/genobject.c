@@ -25,7 +25,7 @@ gen_dealloc(PyGenObject *gen)
 	if (gen->gi_weakreflist != NULL)
 		PyObject_ClearWeakRefs(self);
 
-	_PyObject_GC_TRACK(self);
+	PyObject_GC_Track(self);
 
 	if (gen->gi_frame != NULL && gen->gi_frame->f_stacktop != NULL) {
 		/* Generator is paused, so we need to close */
@@ -187,8 +187,8 @@ gen_del(PyObject *self)
                 _Py_NewReference(self);
                 self->ob_refcnt = refcnt;
         }
-        assert(PyType_IS_GC(self->ob_type) &&
-               _Py_AS_GC(self)->gc.gc_refs != _PyGC_REFS_UNTRACKED);
+//        assert(PyType_IS_GC(self->ob_type) &&
+//               _Py_AS_GC(self)->gc.gc_refs != _PyGC_REFS_UNTRACKED);
 
         /* If Py_REF_DEBUG, _Py_NewReference bumped _Py_RefTotal, so
          * we need to undo that. */
@@ -389,7 +389,7 @@ PyGen_New(PyFrameObject *f)
 	gen->gi_code = (PyObject *)(f->f_code);
 	gen->gi_running = 0;
 	gen->gi_weakreflist = NULL;
-	_PyObject_GC_TRACK(gen);
+	PyObject_GC_Track(gen);
 	return (PyObject *)gen;
 }
 

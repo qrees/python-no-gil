@@ -158,7 +158,7 @@ PyList_New(Py_ssize_t size)
 	}
 	Py_SIZE(op) = size;
 	op->allocated = size;
-	_PyObject_GC_TRACK(op);
+	PyObject_GC_Track(op);
 	return (PyObject *) op;
 }
 
@@ -2849,14 +2849,14 @@ list_iter(PyObject *seq)
 	it->it_index = 0;
 	Py_INCREF(seq);
 	it->it_seq = (PyListObject *)seq;
-	_PyObject_GC_TRACK(it);
+	PyObject_GC_Track(it);
 	return (PyObject *)it;
 }
 
 static void
 listiter_dealloc(listiterobject *it)
 {
-	_PyObject_GC_UNTRACK(it);
+	PyObject_GC_UnTrack(it);
 	Py_XDECREF(it->it_seq);
 	PyObject_GC_Del(it);
 }

@@ -866,7 +866,7 @@ PyDictProxy_New(PyObject *dict)
 	if (pp != NULL) {
 		Py_INCREF(dict);
 		pp->dict = dict;
-		_PyObject_GC_TRACK(pp);
+		PyObject_GC_Track(pp);
 	}
 	return (PyObject *)pp;
 }
@@ -1054,7 +1054,7 @@ PyWrapper_New(PyObject *d, PyObject *self)
 		wp->descr = descr;
 		Py_INCREF(self);
 		wp->self = self;
-		_PyObject_GC_TRACK(wp);
+		PyObject_GC_Track(wp);
 	}
 	return (PyObject *)wp;
 }

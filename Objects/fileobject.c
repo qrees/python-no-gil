@@ -87,12 +87,14 @@ PyFile_AsFile(PyObject *f)
 
 void PyFile_IncUseCount(PyFileObject *fobj)
 {
-	fobj->unlocked_count++;
+	_atomic_add(&(fobj->unlocked_count), 1);
+	//fobj->unlocked_count++;
 }
 
 void PyFile_DecUseCount(PyFileObject *fobj)
 {
-	fobj->unlocked_count--;
+	//fobj->unlocked_count--;
+	_atomic_sub(&(fobj->unlocked_count), 0);
 	assert(fobj->unlocked_count >= 0);
 }
 

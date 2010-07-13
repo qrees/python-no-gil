@@ -265,7 +265,7 @@ PyDict_New(void)
 #ifdef SHOW_CONVERSION_COUNTS
 	++created;
 #endif
-	_PyObject_GC_TRACK(mp);
+	PyObject_GC_Track(mp);
 	return (PyObject *)mp;
 }
 
@@ -2348,7 +2348,7 @@ dictiter_new(PyDictObject *dict, PyTypeObject *itertype)
 	}
 	else
 		di->di_result = NULL;
-	_PyObject_GC_TRACK(di);
+	PyObject_GC_Track(di);
 	return (PyObject *)di;
 }
 

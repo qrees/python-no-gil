@@ -323,7 +323,7 @@ PyThreadState_Get(void)
 	pthread_t tid = pthread_self();
 	return _ThreadsStates[tid];
 	//printf("Current thread: %p, tid: %i, map[id]: %p\n", _PyThreadState_Current, tid, _ThreadsStates[tid]);
-	return _PyThreadState_Current;
+	//return _PyThreadState_Current;
 }
 
 PyThreadState *

@@ -79,7 +79,7 @@ PyTuple_New(register Py_ssize_t size)
 		Py_INCREF(op);	/* extra INCREF so that this is never freed */
 	}
 #endif
-	_PyObject_GC_TRACK(op);
+	PyObject_GC_Track(op);
 	return (PyObject *) op;
 }
 
@@ -824,7 +824,7 @@ _PyTuple_Resize(PyObject **pv, Py_ssize_t newsize)
 
 	/* XXX UNREF/NEWREF interface should be more symmetrical */
 	_Py_DEC_REFTOTAL;
-	_PyObject_GC_UNTRACK(v);
+	PyObject_GC_UnTrack(v);
 	_Py_ForgetReference((PyObject *) v);
 	/* DECREF items deleted by shrinkage */
 	for (i = newsize; i < oldsize; i++) {
@@ -843,7 +843,7 @@ _PyTuple_Resize(PyObject **pv, Py_ssize_t newsize)
 		memset(&sv->ob_item[oldsize], 0,
 		       sizeof(*sv->ob_item) * (newsize - oldsize));
 	*pv = (PyObject *) sv;
-	_PyObject_GC_TRACK(sv);
+	PyObject_GC_Track(sv);
 	return 0;
 }
 
@@ -893,7 +893,7 @@ typedef struct {
 static void
 tupleiter_dealloc(tupleiterobject *it)
 {
-	_PyObject_GC_UNTRACK(it);
+	PyObject_GC_UnTrack(it);
 	Py_XDECREF(it->it_seq);
 	PyObject_GC_Del(it);
 }
@@ -993,6 +993,6 @@ tuple_iter(PyObject *seq)
 	it->it_index = 0;
 	Py_INCREF(seq);
 	it->it_seq = (PyTupleObject *)seq;
-	_PyObject_GC_TRACK(it);
+	PyObject_GC_Track(it);
 	return (PyObject *)it;
 }

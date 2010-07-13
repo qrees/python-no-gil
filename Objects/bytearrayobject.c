@@ -3298,8 +3298,8 @@ typedef struct {
 static void
 bytesiter_dealloc(bytesiterobject *it)
 {
-    _PyObject_GC_UNTRACK(it);
-    Py_XDECREF(it->it_seq);
+    //_PyObject_GC_UNTRACK(it);
+    //Py_XDECREF(it->it_seq);
     PyObject_GC_Del(it);
 }
 
@@ -3401,7 +3401,7 @@ bytes_iter(PyObject *seq)
     it->it_index = 0;
     Py_INCREF(seq);
     it->it_seq = (PyByteArrayObject *)seq;
-    _PyObject_GC_TRACK(it);
+    PyObject_GC_Track(it);
     return (PyObject *)it;
 }
 

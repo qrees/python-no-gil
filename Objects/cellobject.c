@@ -13,7 +13,7 @@ PyCell_New(PyObject *obj)
 	op->ob_ref = obj;
 	Py_XINCREF(obj);
 
-	_PyObject_GC_TRACK(op);
+	PyObject_GC_Track(op);
 	return (PyObject *)op;
 }
 
@@ -46,7 +46,7 @@ PyCell_Set(PyObject *op, PyObject *obj)
 static void
 cell_dealloc(PyCellObject *op)
 {
-	_PyObject_GC_UNTRACK(op);
+	PyObject_GC_UnTrack(op);
 	Py_XDECREF(op->ob_ref);
 	PyObject_GC_Del(op);
 }

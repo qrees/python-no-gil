@@ -918,7 +918,7 @@ set_iter(PySetObject *so)
 	si->si_used = so->used;
 	si->si_pos = 0;
 	si->len = so->used;
-	_PyObject_GC_TRACK(si);
+	PyObject_GC_Track(si);
 	return (PyObject *)si;
 }
 

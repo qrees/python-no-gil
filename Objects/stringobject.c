@@ -80,9 +80,12 @@ PyString_FromStringAndSize(const char *str, Py_ssize_t size)
 	}
 
 	/* Inline PyObject_NewVar */
-	op = (PyStringObject *)PyObject_MALLOC(sizeof(PyStringObject) + size);
+	//op = (PyStringObject *)PyObject_MALLOC(sizeof(PyStringObject) + size);
+	op = (PyStringObject *)_PyObject_GC_Malloc(sizeof(PyStringObject) + size);
 	if (op == NULL)
 		return PyErr_NoMemory();
+	PyObject_GC_Track(op);
+
 	PyObject_INIT_VAR(op, &PyString_Type, size);
 	op->ob_shash = -1;
 	op->ob_sstate = SSTATE_NOT_INTERNED;
@@ -135,9 +138,12 @@ PyString_FromString(const char *str)
 	}
 
 	/* Inline PyObject_NewVar */
-	op = (PyStringObject *)PyObject_MALLOC(sizeof(PyStringObject) + size);
+	//op = (PyStringObject *)PyObject_MALLOC(sizeof(PyStringObject) + size);
+	op = (PyStringObject *)_PyObject_GC_Malloc(sizeof(PyStringObject) + size);
 	if (op == NULL)
 		return PyErr_NoMemory();
+	PyObject_GC_Track(op);
+	
 	PyObject_INIT_VAR(op, &PyString_Type, size);
 	op->ob_shash = -1;
 	op->ob_sstate = SSTATE_NOT_INTERNED;
@@ -999,9 +1005,12 @@ string_concat(register PyStringObject *a, register PyObject *bb)
 				"strings are too large to concat");
 		return NULL;
 	}
-	op = (PyStringObject *)PyObject_MALLOC(sizeof(PyStringObject) + size);
+	//op = (PyStringObject *)PyObject_MALLOC(sizeof(PyStringObject) + size);
+	op = (PyStringObject *)_PyObject_GC_Malloc(sizeof(PyStringObject) + size);
 	if (op == NULL)
 		return PyErr_NoMemory();
+	PyObject_GC_Track(op);
+	
 	PyObject_INIT_VAR(op, &PyString_Type, size);
 	op->ob_shash = -1;
 	op->ob_sstate = SSTATE_NOT_INTERNED;
@@ -1041,10 +1050,13 @@ string_repeat(register PyStringObject *a, register Py_ssize_t n)
 			"repeated string is too long");
 		return NULL;
 	}
-	op = (PyStringObject *)
-		PyObject_MALLOC(sizeof(PyStringObject) + nbytes);
+	//op = (PyStringObject *)
+	//	PyObject_MALLOC(sizeof(PyStringObject) + nbytes);
+	op = (PyStringObject *)_PyObject_GC_Malloc(sizeof(PyStringObject) + size);
 	if (op == NULL)
 		return PyErr_NoMemory();
+	PyObject_GC_Track(op);
+	
 	PyObject_INIT_VAR(op, &PyString_Type, size);
 	op->ob_shash = -1;
 	op->ob_sstate = SSTATE_NOT_INTERNED;
@@ -4274,13 +4286,16 @@ _PyString_Resize(PyObject **pv, Py_ssize_t newsize)
 	/* XXX UNREF/NEWREF interface should be more symmetrical */
 	_Py_DEC_REFTOTAL;
 	_Py_ForgetReference(v);
-	*pv = (PyObject *)
-		PyObject_REALLOC((char *)v, sizeof(PyStringObject) + newsize);
+	//*pv = (PyObject *)
+	//	PyObject_REALLOC((char *)v, sizeof(PyStringObject) + newsize);
+	*pv = (PyObject *)_PyObject_GC_Resize((char *)v, sizeof(PyStringObject) + newsize);
 	if (*pv == NULL) {
 		PyObject_Del(v);
 		PyErr_NoMemory();
 		return -1;
 	}
+	//PyObject_GC_Track(*pv);
+	
 	_Py_NewReference(*pv);
 	sv = (PyStringObject *) *pv;
 	Py_SIZE(sv) = newsize;

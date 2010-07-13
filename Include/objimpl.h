@@ -242,15 +242,27 @@ PyAPI_FUNC(PyVarObject *) _PyObject_GC_Resize(PyVarObject *, Py_ssize_t);
 #define _PyObject_GC_Del PyObject_GC_Del
 
 /* GC information is stored BEFORE the object structure. */
+
 typedef union _gc_head {
 	struct {
 		union _gc_head *gc_next;
 		union _gc_head *gc_prev;
 		Py_ssize_t gc_refs;
+		void* color;
+		void * curr_node;
 	} gc;
-	long double dummy;  /* force worst-case alignment */
+	long double dummy;
 } PyGC_Head;
 
+/* GC information is stored BEFORE the object structure. */
+/*
+typedef union _accgc_head {
+	struct {
+		char color;
+	} gc;
+	long double dummy;
+} PyACCGC_Head;
+*/
 extern PyGC_Head *_PyGC_generation0;
 
 #define _Py_AS_GC(o) ((PyGC_Head *)(o)-1)
@@ -276,14 +288,17 @@ extern PyGC_Head *_PyGC_generation0;
  * gc_next doesn't need to be set to NULL, but doing so is a good
  * way to provoke memory errors if calling code is confused.
  */
+#define _PyObject_GC_UNTRACK(o)
+/*
 #define _PyObject_GC_UNTRACK(o) do { \
-	PyGC_Head *g = _Py_AS_GC(o); \
+	PyACCGC_Head *g = _Py_AS_GC(o); \
 	assert(g->gc.gc_refs != _PyGC_REFS_UNTRACKED); \
 	g->gc.gc_refs = _PyGC_REFS_UNTRACKED; \
 	g->gc.gc_prev->gc.gc_next = g->gc.gc_next; \
 	g->gc.gc_next->gc.gc_prev = g->gc.gc_prev; \
 	g->gc.gc_next = NULL; \
     } while (0);
+*/
 
 PyAPI_FUNC(PyObject *) _PyObject_GC_Malloc(size_t);
 PyAPI_FUNC(PyObject *) _PyObject_GC_New(PyTypeObject *);
@@ -329,6 +344,8 @@ PyAPI_FUNC(void) PyObject_GC_Del(void *);
 
 #define PyObject_GET_WEAKREFS_LISTPTR(o) \
 	((PyObject **) (((char *) (o)) + Py_TYPE(o)->tp_weaklistoffset))
+
+int accgc_init(void);
 
 #ifdef __cplusplus
 }

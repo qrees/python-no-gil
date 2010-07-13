@@ -56,7 +56,7 @@ PyFunction_New(PyObject *code, PyObject *globals)
 	}
 	else
 		return NULL;
-	_PyObject_GC_TRACK(op);
+	PyObject_GC_Track(op);
 	return (PyObject *)op;
 }
 
