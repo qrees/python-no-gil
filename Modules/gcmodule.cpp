@@ -1452,9 +1452,19 @@ _PyObject_GC_UnTrack(PyObject *op)
     PyObject_GC_UnTrack(op);
 }
 
+int move_to_list(PyObject *obj, void * list){
+	list<PyGC_Head*> * new_list = (list<PyGC_Head*> *)list;
+
+	PyGC_Head * head = AS_GC(obj);
+	if(head->gc.color != accgc_white){
+		gc_list_move(head, accgc_gray);
+		
+	}
+}
+
 void accgc_collect(){
-	list<PyGC_Head*>::iterator begin = accgc_gray.begin();
-	list<PyGC_Head*>::iterator end = accgc_gray.end();
+	//list<PyGC_Head*>::iterator begin = accgc_gray.begin();
+	//list<PyGC_Head*>::iterator end = accgc_gray.end();
 	
 	PyThreadState* root = PyThreadState_Get();
 	PyFrameObject* frame;
@@ -1467,17 +1477,33 @@ void accgc_collect(){
 	while (frame){
 		i++;
 		PyGC_Head * head = AS_GC(frame);
-		
 		if(head->gc.color != &accgc_gray){
 			list<PyGC_Head*>::iterator curr((std::_List_node_base*)head->gc.curr_node);
 			list<PyGC_Head*>::iterator past_curr = curr;
 			past_curr++;
-			accgc_gray.insert(accgc_gray.end(), curr, past_curr);
+			accgc_gray.splice(accgc_gray.end(), curr, past_curr);
 			(*curr)->gc.color = &accgc_gray;
 		}
 		frame = frame->f_back;
 	}
-	//printf("stack depth: %i\n", i);
+	list<PyGC_Head*>::iterator it;
+	list<PyGC_Head*>::iterator end = accgc_gray.end();
+	traverseproc traverse;
+	for(it = accgc_gray.begin(); it != end; it++){
+		PyGC_Head* head = *it;
+		i++;
+		PyObject *obj = FROM_GC(head);
+		traverse = obj->ob_type->tp_traverse;
+		(void) traverse(obj,
+				(visitproc)move_to_list,
+				(void *)&accgc_white);
+		list<PyGC_Head*>::iterator curr((std::_List_node_base*)head->gc.curr_node);
+		list<PyGC_Head*>::iterator past_curr = curr;
+		past_curr++;
+		accgc_black.insert(accgc_black.end(), curr, past_curr);
+		(*curr)->gc.color = &accgc_black;
+	};
+	printf("Gray objects list length: %i\n", i);
 	
 }
 
