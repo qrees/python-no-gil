@@ -178,4 +178,10 @@ PyAPI_FUNC(PyObject*) _Py_Mangle(PyObject *p, PyObject *name);
 #define PyDoc_STR(str) ""
 #endif
 
+
+extern PyGC_Head accgc_white;
+extern PyGC_Head accgc_gray;
+extern PyGC_Head accgc_black;
+
+
 #endif /* !Py_PYTHON_H */

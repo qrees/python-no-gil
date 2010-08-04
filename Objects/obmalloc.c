@@ -1,5 +1,7 @@
 #include "Python.h"
 
+#include <signal.h>
+
 #ifdef WITH_PYMALLOC
 
 /* An object allocator for Python.
@@ -914,6 +916,8 @@ redirect:
 }
 
 /* free */
+#define AS_GC(o) ((PyGC_Head *)(o)-1)
+#define FROM_GC(g) ((PyObject *)(((PyGC_Head *)g)+1))
 
 #undef PyObject_Free
 void
@@ -927,6 +931,7 @@ PyObject_Free(void *p)
 	if (p == NULL)	/* free(NULL) has no effect */
 		return;
 
+	raise (SIGUSR1);
 	pool = POOL_ADDR(p);
 	if (Py_ADDRESS_IN_RANGE(p, pool)) {
 		/* We allocated this address. */

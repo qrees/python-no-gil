@@ -77,7 +77,7 @@ PyCode_New(int argcount, int nlocals, int stacksize, int flags,
 			continue;
 		PyString_InternInPlace(&PyTuple_GET_ITEM(consts, i));
 	}
-	co = PyObject_NEW(PyCodeObject, &PyCode_Type);
+	co = (PyCodeObject *) PyObject_Init( (PyObject *) _PyObject_GC_Malloc( (&PyCode_Type)->tp_basicsize ), &PyCode_Type);
 	if (co != NULL) {
 		co->co_argcount = argcount;
 		co->co_nlocals = nlocals;
