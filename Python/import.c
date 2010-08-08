@@ -2035,7 +2035,7 @@ PyImport_ImportModule(const char *name)
 {
 	PyObject *pname;
 	PyObject *result;
-
+	printf("Importing module '%s'\n", name);
 	pname = PyString_FromString(name);
 	if (pname == NULL)
 		return NULL;

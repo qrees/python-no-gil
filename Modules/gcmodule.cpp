@@ -56,6 +56,11 @@ static struct gc_generation generations[NUM_GENERATIONS] = {
 	{{{GEN_HEAD(2), GEN_HEAD(2), 0, &accgc_white}},	10,		0},
 };
 
+PyGC_Head* p_accgc_white;
+PyGC_Head* p_accgc_gray;
+PyGC_Head* p_accgc_black;
+int white_list;
+PyGC_Head gc_lists[3];
 PyGC_Head accgc_white;
 PyGC_Head accgc_gray;
 PyGC_Head accgc_black;
@@ -1452,20 +1457,47 @@ _PyObject_GC_UnTrack(PyObject *op)
     PyObject_GC_UnTrack(op);
 }
 
+int alloc_count = 0;
+int move_to_black;
+
 int move_to_list(PyObject *obj, void * list){
 	PyGC_Head* new_list = (PyGC_Head*)list;
-
 	PyGC_Head * head = AS_GC(obj);
+	traverseproc traverse;
+
 	if(head->gc.gc_next){
-		if(head->gc.color != &accgc_white){
-			printf("ERROR: %p Moving object to gray list (%p, %p)\n", head, head->gc.gc_next, head->gc.gc_prev );
-			gc_list_move(head, &accgc_gray);
-			printf("ERROR: Object moved\n" );
+		if(head->gc.color == p_accgc_white){
+			//printf("%p Moving object to gray list (%p, %p)\n", head, head->gc.gc_next, head->gc.gc_prev );
+			gc_list_move(head, p_accgc_gray);
+			head->gc.color = p_accgc_gray;
+
+			traverse = obj->ob_type->tp_traverse;
+			if (traverse!=0){
+				(void) traverse(obj,
+						(visitproc)move_to_list,
+						(void *)&accgc_white);
+			}else{
+				//printf("ERROR: %p tp_traverse is NULL for gc:%p type:%s\n", head, obj, obj->ob_type->tp_name );
+			}
+			move_to_black++;
+			gc_list_move(head, p_accgc_black);
+			head->gc.color = p_accgc_black;
+		}else{
+			//printf("Object is not on white list, skipping (%p, white: %p, gray: %p, black: %p)\n", head->gc.color, p_accgc_white, p_accgc_gray, p_accgc_black);
+			
 		}
 	}else{
-		printf("Object of type %s not under GC control!\n", obj->ob_type->tp_name);
+		//printf("Object of type %s not under GC control!\n", obj->ob_type->tp_name);
 	}
-	
+	return 0;
+}
+
+void accgc_list_cycle(){
+	white_list += 2;
+	white_list %= 3;
+	p_accgc_white = &(gc_lists[white_list]);
+	p_accgc_gray = &(gc_lists[(white_list+1)%3]);
+	p_accgc_black = &(gc_lists[(white_list+2)%3]);
 }
 
 void accgc_collect(){
@@ -1473,42 +1505,24 @@ void accgc_collect(){
 	PyFrameObject* frame;
 	if(root->frame)
 		frame = root->frame;
-	else
+	else{
 		return;
-	int i = 0;
-	//printf("White list %p\n", &accgc_white);
+	}
+
+	move_to_black  = 0;
 	while (frame){
-		i++;
 		PyGC_Head * head = AS_GC(frame);
-		if(head->gc.color != &accgc_gray){
-			gc_list_move(head, &accgc_gray);
-			head->gc.color = &accgc_gray;
+		if(head->gc.color != p_accgc_gray){
+			PyObject *obj = FROM_GC(head);
+			move_to_list(obj, &accgc_white);
+		}else{
+			printf("ERROR: Frame is on gray list\n");
 		}
 		frame = frame->f_back;
 	}
+	printf("Objects moved to black list: %i/%i\n", move_to_black, alloc_count);
 
-	traverseproc traverse;
-	PyGC_Head * curr = accgc_gray.gc.gc_next;
-	PyGC_Head * next;
-	while(curr != &accgc_gray){
-		i++;
-		PyObject *obj = FROM_GC(curr);
-		traverse = obj->ob_type->tp_traverse;
-
-		if (traverse!=0){
-			(void) traverse(obj,
-					(visitproc)move_to_list,
-					(void *)&accgc_white);
-		}else{
-			printf("ERROR: %p tp_traverse is NULL for gc:%p type:%s\n", curr, obj, obj->ob_type->tp_name );
-		}
-		
-		next = curr->gc.gc_next;
-		gc_list_move(curr, &accgc_black);
-		curr->gc.color = &accgc_black;
-		curr = next;
-	};
-	//printf("Gray objects list length: %i\n", i);
+	accgc_list_cycle();
 	
 }
 
@@ -1521,7 +1535,6 @@ _PyObject_GC_Malloc(size_t basicsize)
 		return PyErr_NoMemory();
 	
 	pthread_spin_lock(&colored_lock);
-	//pthread_mutex_lock( &colored_mutex );
 	
 	g = (PyGC_Head *)PyObject_MALLOC(
                 sizeof(PyGC_Head) + basicsize);
@@ -1530,44 +1543,19 @@ _PyObject_GC_Malloc(size_t basicsize)
 		return PyErr_NoMemory();
 	}
 	
-	//list<PyGC_Head*> lista;
-	//lista.push_back(g);
-	//list<PyGC_Head*>::iterator curr = lista.begin();
-	
-	//g->gc.curr_node = curr._M_node;
-	//g->gc.color = &accgc_white;
-	//accgc_white.splice(accgc_white.end(), lista);
-	
-	g->gc.gc_next = &accgc_white;
-	g->gc.gc_prev = accgc_white.gc.gc_prev;
+	g->gc.color = p_accgc_white;
+	g->gc.gc_next = p_accgc_white;
+	g->gc.gc_prev = p_accgc_white->gc.gc_prev;
 	g->gc.gc_prev->gc.gc_next = g;
-	accgc_white.gc.gc_prev = g;
-
-	//list<PyGC_Head*>::reverse_iterator it = ++accgc_gray.rend();
-	//printf("%p -> %p\n", g, *it);
-	/*g->gc.gc_refs = (-3);
-	g->gc.gc_next = _PyGC_gray;
-	g->gc.gc_prev = _PyGC_gray->gc.gc_prev;
-	g->gc.gc_prev->gc.gc_next = g;
-	_PyGC_gray->gc.gc_prev = g;*/
+	p_accgc_white->gc.gc_prev = g;
 	
-	//pthread_mutex_unlock(&colored_mutex);
+	
 	pthread_spin_unlock(&colored_lock);
-	
-	//accgc_collect();
-	/*
-	generations[0].count++;
- 	if (generations[0].count > generations[0].threshold &&
- 	    enabled &&
- 	    generations[0].threshold &&
- 	    !collecting &&
- 	    !PyErr_Occurred()) {
-		collecting = 1;
-		collect_generations();
-		collecting = 0;
-	}*/
+
+	alloc_count ++;
+	if (alloc_count % 1000 == 0)
+		accgc_collect();
 	op = FROM_GC(g);
-	//PyObject_GC_Track_(op);
 	return op;
 }
 
@@ -1603,10 +1591,10 @@ _PyObject_GC_Resize(PyVarObject *op, Py_ssize_t nitems)
 	if (g == NULL)
 		return (PyVarObject *)PyErr_NoMemory();
 
-	g->gc.gc_next = &accgc_white;
-	g->gc.gc_prev = accgc_white.gc.gc_prev;
+	g->gc.gc_next = p_accgc_white;
+	g->gc.gc_prev = p_accgc_white->gc.gc_prev;
 	g->gc.gc_prev->gc.gc_next = g;
-	accgc_white.gc.gc_prev = g; // append to list again
+	p_accgc_white->gc.gc_prev = g; // append to list again
 	
 	op = (PyVarObject *) FROM_GC(g);
 	Py_SIZE(op) = nitems;
@@ -1633,13 +1621,19 @@ _PyObject_GC_Del(PyObject *op)
     PyObject_GC_Del(op);
 }
 
-
 int accgc_init(){
 	
 	printf("Init GC\n");
-	gc_list_init(&accgc_white);
-	gc_list_init(&accgc_gray);
-	gc_list_init(&accgc_black);
+	//gc_list_init(&accgc_white);
+	//gc_list_init(&accgc_gray);
+	//gc_list_init(&accgc_black);
+	gc_list_init(&(gc_lists[0]));
+	gc_list_init(&(gc_lists[1]));
+	gc_list_init(&(gc_lists[2]));
+	
+	white_list = 0;
+	accgc_list_cycle();
+	
 	pthread_spin_init(&colored_lock, pshared);
 	return 0;
 };

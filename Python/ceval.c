@@ -2759,6 +2759,7 @@ PyEval_EvalCodeEx(PyCodeObject *co, PyObject *globals, PyObject *locals,
 	f = PyFrame_New(tstate, co, globals, locals);
 	if (f == NULL)
 		return NULL;
+	//printf("{");
 
 	fastlocals = f->f_localsplus;
 	freevars = f->f_localsplus + co->co_nlocals;
@@ -2981,6 +2982,7 @@ fail: /* Jump here from prelude on failure */
 	assert(tstate != NULL);
 	++tstate->recursion_depth;
 	Py_DECREF(f);
+//	printf("}");
 	--tstate->recursion_depth;
 	return retval;
 }

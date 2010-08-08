@@ -931,7 +931,7 @@ PyObject_Free(void *p)
 	if (p == NULL)	/* free(NULL) has no effect */
 		return;
 
-	raise (SIGUSR1);
+	//raise (SIGUSR1);
 	pool = POOL_ADDR(p);
 	if (Py_ADDRESS_IN_RANGE(p, pool)) {
 		/* We allocated this address. */

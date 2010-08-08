@@ -6,12 +6,12 @@
 print "----------------------"
 print "start of program"
 i = 0
+def fun():
+    a = 1
+
 while True:
-    b = {}
-    a = {}
+    fun()
 #    print "iteration:", i
     i += 1
-    a['b'] = b
-    b['a'] = a
 #    time.sleep(0.01)
 
