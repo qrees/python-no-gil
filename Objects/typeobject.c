@@ -2455,7 +2455,7 @@ type_new(PyTypeObject *metatype, PyObject *args, PyObject *kwds)
 
 	/* Put the proper slots in place */
 	fixup_slot_dispatchers(type);
-
+	printf("Allocated new type %p %s\n", type, type->tp_name);
 	return (PyObject *)type;
 }
 
@@ -2676,7 +2676,7 @@ type_traverse(PyTypeObject *type, visitproc visit, void *arg)
 {
 	/* Because of type_is_gc(), the collector only calls this
 	   for heaptypes. */
-	assert(type->tp_flags & Py_TPFLAGS_HEAPTYPE);
+	//assert(type->tp_flags & Py_TPFLAGS_HEAPTYPE);
 
 	Py_VISIT(type->tp_dict);
 	Py_VISIT(type->tp_cache);

@@ -20,6 +20,7 @@ PyModule_New(const char *name)
 	PyModuleObject *m;
 	PyObject *nameobj;
 	m = PyObject_GC_New(PyModuleObject, &PyModule_Type);
+	accgc_to_root(m); /* treat modules as roots always, when module is no longer used, it's still cached */
 	if (m == NULL)
 		return NULL;
 	nameobj = PyString_FromString(name);
@@ -34,6 +35,7 @@ PyModule_New(const char *name)
 		goto fail;
 	Py_DECREF(nameobj);
 	PyObject_GC_Track(m);
+	printf("New module %p %s\n", m, name);
 	return (PyObject *)m;
 
  fail:

@@ -254,6 +254,7 @@ typedef union _gc_head {
 		Py_ssize_t gc_refs;
 		void* color;
 		void * curr_node;
+		int root;
 	} gc;
 	long double dummy;
 } PyGC_Head;
@@ -350,6 +351,9 @@ PyAPI_FUNC(void) PyObject_GC_Del(void *);
 	((PyObject **) (((char *) (o)) + Py_TYPE(o)->tp_weaklistoffset))
 
 int accgc_init(void);
+void accgc_to_root(PyObject* obj);
+void accgc_from_root(PyObject* obj);
+void accgc_collect(void);
 
 #ifdef __cplusplus
 }

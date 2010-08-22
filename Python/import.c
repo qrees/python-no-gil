@@ -986,6 +986,7 @@ load_source_module(char *name, char *pathname, FILE *fp)
 #endif
 	cpathname = make_compiled_pathname(pathname, buf,
 					   (size_t)MAXPATHLEN + 1);
+	accgc_enable = 0;
 	if (cpathname != NULL &&
 	    (fpc = check_compiled_module(pathname, st.st_mtime, cpathname))) {
 		co = read_compiled_module(cpathname, fpc);
@@ -1012,7 +1013,11 @@ load_source_module(char *name, char *pathname, FILE *fp)
 				write_compiled_module(co, cpathname, &st);
 		}
 	}
+	accgc_to_root(co);
+	accgc_enable = 1;
 	m = PyImport_ExecCodeModuleEx(name, (PyObject *)co, pathname);
+	accgc_to_root(m);
+	accgc_from_root(co);
 	Py_DECREF(co);
 
 	return m;

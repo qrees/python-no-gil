@@ -66,8 +66,11 @@ using __cxxabiv1::__cxa_demangle;
 #endif
 
 static void signal_segv(int signum, siginfo_t* info, void*ptr) {
+
+	//if(info->si_signo == SIGSEGV)
+	//	_exit (-1);
+	
 	static const char *si_codes[3] = {"", "SEGV_MAPERR", "SEGV_ACCERR"};
-return;
 	int i, f = 0;
 	ucontext_t *ucontext = (ucontext_t*)ptr;
 	Dl_info dlinfo;
@@ -126,7 +129,8 @@ return;
 #else
 	sigsegv_outp("Not printing stack strace.");
 #endif
-	//_exit (-1);
+	if(info->si_signo == SIGSEGV)
+		_exit (-1);
 }
 
 static void __attribute__((constructor)) setup_sigsegv() {
@@ -134,11 +138,10 @@ static void __attribute__((constructor)) setup_sigsegv() {
 	memset(&action, 0, sizeof(action));
 	action.sa_sigaction = signal_segv;
 	action.sa_flags = SA_SIGINFO;
-	//if(sigaction(SIGSEGV, &action, NULL) < 0)
-	//	perror("sigaction: SIGSEGV");
-	if(sigaction(SIGUSR1, &action, NULL) < 0)
-		perror("sigaction: SIGUSR1");
-	
+	if(sigaction(SIGSEGV, &action, NULL) < 0)
+		perror("sigaction: SIGSEGV");
+	//if(sigaction(SIGUSR1, &action, NULL) < 0)
+	//	perror("sigaction: SIGUSR1");
 }
 
 

@@ -5153,6 +5153,7 @@ PyString_InternInPlace(PyObject **p)
 			PyErr_Clear(); /* Don't leave an exception */
 			return;
 		}
+		accgc_to_root(interned);
 	}
 	t = PyDict_GetItem(interned, (PyObject *)s);
 	if (t) {

@@ -1320,7 +1320,9 @@ PyRun_FileExFlags(FILE *fp, const char *filename, int start, PyObject *globals,
 		return NULL;
 	}
 	printf("Running: %s\n", filename);
+	accgc_enable = 1;
 	ret = run_mod(mod, filename, globals, locals, flags, arena);
+	fflush(stdout);
 	PyArena_Free(arena);
 	return ret;
 }

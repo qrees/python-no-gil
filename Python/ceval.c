@@ -773,6 +773,8 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 	fastlocals = f->f_localsplus;
 	freevars = f->f_localsplus + co->co_nlocals;
 	first_instr = (unsigned char*) PyString_AS_STRING(co->co_code);
+
+	//accgc_collect();
 	/* An explanation is in order for the next line.
 
 	   f->f_lasti now refers to the index of the last instruction
@@ -840,7 +842,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 		   event needs attention (e.g. a signal handler or
 		   async I/O handler); see Py_AddPendingCall() and
 		   Py_MakePendingCalls() above. */
-
+		
 		if (--_Py_Ticker < 0) {
 			if (*next_instr == SETUP_FINALLY) {
 				/* Make the last opcode before
@@ -2523,6 +2525,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 			goto dispatch_opcode;
 
 		default:
+			printf("Failed at code object: %p\n", f->f_code);
 			fprintf(stderr,
 				"XXX lineno: %d, opcode: %d\n",
 				PyCode_Addr2Line(f->f_code, f->f_lasti),
@@ -2728,8 +2731,8 @@ fast_yield:
 	/* pop frame */
 exit_eval_frame:
 	Py_LeaveRecursiveCall();
+	accgc_collect();
 	tstate->frame = f->f_back;
-
 	return retval;
 }
 

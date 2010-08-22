@@ -2056,7 +2056,7 @@ none_dealloc(PyObject* ignore)
 }
 
 
-static PyTypeObject PyNone_Type = {
+PyTypeObject PyNone_Type = {
 	PyVarObject_HEAD_INIT(&PyType_Type, 0)
 	"NoneType",
 	0,
@@ -2087,7 +2087,7 @@ NotImplemented_repr(PyObject *op)
 	return PyString_FromString("NotImplemented");
 }
 
-static PyTypeObject PyNotImplemented_Type = {
+PyTypeObject PyNotImplemented_Type = {
 	PyVarObject_HEAD_INIT(&PyType_Type, 0)
 	"NotImplementedType",
 	0,

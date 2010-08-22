@@ -427,6 +427,9 @@ typedef struct _heaptypeobject {
 	/* here are optional user slots, followed by the members. */
 } PyHeapTypeObject;
 
+extern PyTypeObject PyNone_Type;
+extern PyTypeObject PyNotImplemented_Type;
+
 /* access macro to the members which are floating "behind" the object */
 #define PyHeapType_GET_MEMBERS(etype) \
     ((PyMemberDef *)(((char *)etype) + Py_TYPE(etype)->tp_basicsize))

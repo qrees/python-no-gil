@@ -33,7 +33,7 @@ typedef struct _is {
 #ifdef WITH_TSC
     int tscdump;
 #endif
-
+    traverseproc traverse;
 } PyInterpreterState;
 
 
@@ -42,6 +42,7 @@ typedef struct _is {
 struct _frame; /* Avoid including frameobject.h */
 
 /* Py_tracefunc return -1 when raising an exception, or 0 for success. */
+int PyInterpreterState_traverse(PyInterpreterState *is, visitproc visitproc, void *);
 typedef int (*Py_tracefunc)(PyObject *, struct _frame *, int, PyObject *);
 
 /* The following values are used for 'what' for tracefunc functions: */

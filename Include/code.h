@@ -6,6 +6,7 @@
 extern "C" {
 #endif
 
+	
 /* Bytecode object */
 typedef struct {
     PyObject_HEAD
@@ -26,6 +27,8 @@ typedef struct {
     PyObject *co_lnotab;	/* string (encoding addr<->lineno mapping) */
     void *co_zombieframe;     /* for optimization only (see frameobject.c) */
 } PyCodeObject;
+
+int PyCode_traverse(PyCodeObject* obj, visitproc visit, void * arg);
 
 /* Masks for co_flags above */
 #define CO_OPTIMIZED	0x0001

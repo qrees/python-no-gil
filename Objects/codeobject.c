@@ -39,6 +39,18 @@ intern_strings(PyObject *tuple)
 	}
 }
 
+int PyCode_traverse(PyCodeObject* obj, visitproc visit, void * arg){
+	Py_VISIT(obj->co_cellvars);
+	Py_VISIT(obj->co_code);
+	Py_VISIT(obj->co_consts);
+	Py_VISIT(obj->co_filename);
+	Py_VISIT(obj->co_freevars);
+	Py_VISIT(obj->co_lnotab);
+	Py_VISIT(obj->co_name);
+	Py_VISIT(obj->co_names);
+	Py_VISIT(obj->co_varnames);
+	return 0;
+}
 
 PyCodeObject *
 PyCode_New(int argcount, int nlocals, int stacksize, int flags,
@@ -442,7 +454,7 @@ PyTypeObject PyCode_Type = {
 	0,				/* tp_as_buffer */
 	Py_TPFLAGS_DEFAULT,		/* tp_flags */
 	code_doc,			/* tp_doc */
-	0,				/* tp_traverse */
+	PyCode_traverse,				/* tp_traverse */
 	0,				/* tp_clear */
 	code_richcompare,				/* tp_richcompare */
 	0,				/* tp_weaklistoffset */

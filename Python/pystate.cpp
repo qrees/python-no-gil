@@ -60,6 +60,18 @@ static void _PyGILState_NoteThreadState(PyThreadState* tstate);
 #endif
 
 
+int
+PyInterpreterState_traverse(PyInterpreterState *is, visitproc visit, void * arg){
+	Py_VISIT(is->builtins);
+	Py_VISIT(is->modules);
+	Py_VISIT(is->sysdict);
+	Py_VISIT(is->codec_error_registry);
+	Py_VISIT(is->codec_search_cache);
+	Py_VISIT(is->codec_search_path);
+	Py_VISIT(is->modules_reloading);
+	return 0;
+}
+
 PyInterpreterState *
 PyInterpreterState_New(void)
 {
