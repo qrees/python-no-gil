@@ -184,5 +184,5 @@ extern PyGC_Head accgc_gray;
 extern PyGC_Head accgc_black;
 extern int accgc_enable;
 extern int alloc_count;
-
+extern int accgc_run;
 #endif /* !Py_PYTHON_H */

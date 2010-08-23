@@ -146,6 +146,7 @@ PyArena_New()
                 free((void *)arena);
                 return (PyArena*)PyErr_NoMemory();
         }
+        accgc_to_root(arena->a_objects);
 #if defined(Py_DEBUG)
         arena->total_allocs = 0;
         arena->total_size = 0;

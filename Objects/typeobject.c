@@ -33,6 +33,17 @@ struct method_cache_entry {
 static struct method_cache_entry method_cache[1 << MCACHE_SIZE_EXP];
 static unsigned int next_version_tag = 0;
 
+int accgc_method_cache_traverse(visitproc visit, void* arg){
+	Py_ssize_t i;
+	printf("Traversing method cache\n");
+	for (i = 0; i < (1 << MCACHE_SIZE_EXP); i++) {
+		Py_VISIT(method_cache[i].name);
+		Py_VISIT(method_cache[i].value);
+	}
+	printf("\n");
+	return 0;
+}
+
 unsigned int
 PyType_ClearCache(void)
 {
@@ -1148,6 +1159,7 @@ PyType_IsSubtype(PyTypeObject *a, PyTypeObject *b)
 		/* Deal with multiple inheritance without recursion
 		   by walking the MRO tuple */
 		Py_ssize_t i, n;
+		printf("PyTuple_Check(%p)\n", mro);
 		assert(PyTuple_Check(mro));
 		n = PyTuple_GET_SIZE(mro);
 		for (i = 0; i < n; i++) {
@@ -2491,18 +2503,19 @@ _PyType_Lookup(PyTypeObject *type, PyObject *name)
 	n = PyTuple_GET_SIZE(mro);
 	for (i = 0; i < n; i++) {
 		base = PyTuple_GET_ITEM(mro, i);
-		if (PyClass_Check(base))
+		if (PyClass_Check(base)){
 			dict = ((PyClassObject *)base)->cl_dict;
-		else {
+		} else {
 			assert(PyType_Check(base));
 			dict = ((PyTypeObject *)base)->tp_dict;
 		}
 		assert(dict && PyDict_Check(dict));
 		res = PyDict_GetItem(dict, name);
-		if (res != NULL)
+		if (res != NULL){
 			break;
+		}
 	}
-
+	//printf("res is %p\n", res);
 	if (MCACHE_CACHEABLE_NAME(name) && assign_version_tag(type)) {
 		h = MCACHE_HASH_METHOD(type, name);
 		method_cache[h].version = type->tp_version_tag;

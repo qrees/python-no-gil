@@ -354,6 +354,7 @@ int accgc_init(void);
 void accgc_to_root(PyObject* obj);
 void accgc_from_root(PyObject* obj);
 void accgc_collect(void);
+int accgc_method_cache_traverse(visitproc , void* );
 
 #ifdef __cplusplus
 }

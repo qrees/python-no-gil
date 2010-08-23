@@ -1433,7 +1433,8 @@ PyObject_GenericGetAttr(PyObject *obj, PyObject *name)
 		if (PyType_Ready(tp) < 0)
 			goto done;
 	}
-
+if(accgc_run)
+	printf("Calling _PyType_Lookup after accgc_collect\n");
 #if 0 /* XXX this is not quite _PyType_Lookup anymore */
 	/* Inline _PyType_Lookup */
 	{

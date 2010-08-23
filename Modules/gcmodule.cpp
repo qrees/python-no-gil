@@ -71,7 +71,7 @@ PyGC_Head accgc_gray;
 PyGC_Head accgc_black;
 PyGC_Head accgc_root;
 PyGC_Head accgc_delete;
-
+int accgc_run = 0;
 int accgc_enable = 0;
 
 pthread_spinlock_t colored_lock;
@@ -1619,7 +1619,8 @@ void accgc_collect(){
 	move_to_black  = 0;
 	failed = 0;
 	
-
+	accgc_method_cache_traverse(move_to_list, p_accgc_black);
+	
 	PyGC_Head * curr = p_accgc_root->gc.gc_next;
 	while (curr != p_accgc_root){
 		PyObject * obj = FROM_GC(curr);
@@ -1742,6 +1743,7 @@ void accgc_collect(){
 	}
 	types.clear();
 	printf("GC - end\n");
+	accgc_run = 1;
 }
 
 PyObject *
