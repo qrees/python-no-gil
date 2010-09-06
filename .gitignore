@@ -7,7 +7,7 @@
 a.out
 *.pyc
 Makefile
-Makefile.pre
+#Makefile.pre
 *.log
 build/
 .pydevproject
