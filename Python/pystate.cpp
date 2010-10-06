@@ -329,13 +329,8 @@ PyThreadState_DeleteCurrent()
 PyThreadState *
 PyThreadState_Get(void)
 {
-	//if (_PyThreadState_Current == NULL)
-	//	Py_FatalError("PyThreadState_Get: no current thread");
-
 	pthread_t tid = pthread_self();
 	return _ThreadsStates[tid];
-	//printf("Current thread: %p, tid: %i, map[id]: %p\n", _PyThreadState_Current, tid, _ThreadsStates[tid]);
-	//return _PyThreadState_Current;
 }
 
 PyThreadState *

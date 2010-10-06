@@ -774,7 +774,6 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 	freevars = f->f_localsplus + co->co_nlocals;
 	first_instr = (unsigned char*) PyString_AS_STRING(co->co_code);
 
-	//accgc_collect();
 	/* An explanation is in order for the next line.
 
 	   f->f_lasti now refers to the index of the last instruction
@@ -813,7 +812,8 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 		why = WHY_EXCEPTION;
 		goto on_error;
 	}
-
+	accgc_collect();
+	
 	for (;;) {
 #ifdef WITH_TSC
 		if (inst1 == 0) {
@@ -842,6 +842,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 		   event needs attention (e.g. a signal handler or
 		   async I/O handler); see Py_AddPendingCall() and
 		   Py_MakePendingCalls() above. */
+		
 		
 		if (--_Py_Ticker < 0) {
 			if (*next_instr == SETUP_FINALLY) {
@@ -895,6 +896,8 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 		}
 
 	fast_next_opcode:
+		f->f_currentstack = stack_pointer;
+	
 		f->f_lasti = INSTR_OFFSET();
 
 		/* line-by-line tracing support */
@@ -2731,8 +2734,8 @@ fast_yield:
 	/* pop frame */
 exit_eval_frame:
 	Py_LeaveRecursiveCall();
-	accgc_collect();
 	tstate->frame = f->f_back;
+	
 	return retval;
 }
 

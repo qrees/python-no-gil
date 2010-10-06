@@ -9006,6 +9006,7 @@ void _PyUnicode_Init(void)
     unicode_empty = _PyUnicode_New(0);
     if (!unicode_empty)
         return;
+    accgc_to_root(unicode_empty);
 
     strcpy(unicode_default_encoding, "ascii");
     for (i = 0; i < 256; i++)

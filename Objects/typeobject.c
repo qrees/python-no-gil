@@ -35,12 +35,10 @@ static unsigned int next_version_tag = 0;
 
 int accgc_method_cache_traverse(visitproc visit, void* arg){
 	Py_ssize_t i;
-	printf("Traversing method cache\n");
 	for (i = 0; i < (1 << MCACHE_SIZE_EXP); i++) {
 		Py_VISIT(method_cache[i].name);
 		Py_VISIT(method_cache[i].value);
 	}
-	printf("\n");
 	return 0;
 }
 
@@ -731,14 +729,13 @@ static PyObject *
 type_call(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
 	PyObject *obj;
-
 	if (type->tp_new == NULL) {
 		PyErr_Format(PyExc_TypeError,
 			     "cannot create '%.100s' instances",
 			     type->tp_name);
 		return NULL;
 	}
-
+	
 	obj = type->tp_new(type, args, kwds);
 	if (obj != NULL) {
 		/* Ugly exception: when the call was type(something),
@@ -1159,7 +1156,6 @@ PyType_IsSubtype(PyTypeObject *a, PyTypeObject *b)
 		/* Deal with multiple inheritance without recursion
 		   by walking the MRO tuple */
 		Py_ssize_t i, n;
-		printf("PyTuple_Check(%p)\n", mro);
 		assert(PyTuple_Check(mro));
 		n = PyTuple_GET_SIZE(mro);
 		for (i = 0; i < n; i++) {
@@ -1566,6 +1562,7 @@ mro_implementation(PyTypeObject *type)
 	n = PyTuple_GET_SIZE(bases);
 
 	to_merge = PyList_New(n+1);
+
 	if (to_merge == NULL)
 		return NULL;
 
@@ -1597,7 +1594,6 @@ mro_implementation(PyTypeObject *type)
 		return NULL;
 	}
 	PyList_SET_ITEM(to_merge, n, bases_aslist);
-
 	result = Py_BuildValue("[O]", (PyObject *)type);
 	if (result == NULL) {
 		Py_DECREF(to_merge);
@@ -2467,7 +2463,6 @@ type_new(PyTypeObject *metatype, PyObject *args, PyObject *kwds)
 
 	/* Put the proper slots in place */
 	fixup_slot_dispatchers(type);
-	printf("Allocated new type %p %s\n", type, type->tp_name);
 	return (PyObject *)type;
 }
 
@@ -2515,7 +2510,6 @@ _PyType_Lookup(PyTypeObject *type, PyObject *name)
 			break;
 		}
 	}
-	//printf("res is %p\n", res);
 	if (MCACHE_CACHEABLE_NAME(name) && assign_version_tag(type)) {
 		h = MCACHE_HASH_METHOD(type, name);
 		method_cache[h].version = type->tp_version_tag;
@@ -4089,6 +4083,7 @@ PyType_Ready(PyTypeObject *type)
 	assert(type->tp_dict != NULL);
 	type->tp_flags =
 		(type->tp_flags & ~Py_TPFLAGS_READYING) | Py_TPFLAGS_READY;
+	accgc_to_root(type);
 	return 0;
 
   error:

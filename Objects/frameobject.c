@@ -471,11 +471,16 @@ frame_traverse(PyFrameObject *f, visitproc visit, void *arg)
 	for (i = slots; --i >= 0; ++fastlocals)
 		Py_VISIT(*fastlocals);
 
+	if (f->f_currentstack != NULL) {
+		for (p = f->f_valuestack; p < f->f_currentstack; p++){
+			Py_VISIT(*p);
+		}
+	}
 	/* stack */
-	if (f->f_stacktop != NULL) {
+	/*if (f->f_stacktop != NULL) {
 		for (p = f->f_valuestack; p < f->f_stacktop; p++)
 			Py_VISIT(*p);
-	}
+	}*/
 	return 0;
 }
 
@@ -664,6 +669,7 @@ PyFrame_New(PyThreadState *tstate, PyCodeObject *code, PyObject *globals,
 		f->f_code = code;
 		extras = code->co_nlocals + ncells + nfrees;
 		f->f_valuestack = f->f_localsplus + extras;
+		f->f_currentstack = f->f_valuestack;
 		for (i=0; i<extras; i++)
 			f->f_localsplus[i] = NULL;
 		f->f_locals = NULL;

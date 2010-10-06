@@ -9048,11 +9048,13 @@ INITFUNC(void)
 		stat_result_desc.fields[8].name = PyStructSequence_UnnamedField;
 		stat_result_desc.fields[9].name = PyStructSequence_UnnamedField;
 		PyStructSequence_InitType(&StatResultType, &stat_result_desc);
+		accgc_to_root(&StatResultType);
 		structseq_new = StatResultType.tp_new;
 		StatResultType.tp_new = statresult_new;
 
 		statvfs_result_desc.name = MODNAME ".statvfs_result";
 		PyStructSequence_InitType(&StatVFSResultType, &statvfs_result_desc);
+		accgc_to_root(&StatVFSResultType);
 #ifdef NEED_TICKS_PER_SECOND
 #  if defined(HAVE_SYSCONF) && defined(_SC_CLK_TCK)
 		ticks_per_second = sysconf(_SC_CLK_TCK);

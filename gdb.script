@@ -1,0 +1,19 @@
+define my_bt
+    bt 6
+    cont
+end
+handle SIGUSR1 noprint nopass
+break _Py_AtomicAdd
+commands
+    silent
+    my_bt
+end
+condition 1
+break Modules/gcmodule.cpp:1822
+commands
+    silent
+    printf "# -> Allocated %p\n",op
+    my_bt
+end
+condition 2
+run prog.py > prog.log

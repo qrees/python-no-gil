@@ -38,6 +38,7 @@ PyCell_Set(PyObject *op, PyObject *obj)
 	}
 	oldobj = PyCell_GET(op);
 	Py_XINCREF(obj);
+	accgc_mutate(op);
 	PyCell_SET(op, obj);
 	Py_XDECREF(oldobj);
 	return 0;

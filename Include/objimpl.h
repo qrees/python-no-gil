@@ -306,6 +306,7 @@ extern PyGC_Head *_PyGC_generation0;
 */
 
 PyAPI_FUNC(PyObject *) _PyObject_GC_Malloc(size_t);
+PyAPI_FUNC(PyObject *) _PyObject_GC_Malloc(size_t);
 PyAPI_FUNC(PyObject *) _PyObject_GC_New(PyTypeObject *);
 PyAPI_FUNC(PyVarObject *) _PyObject_GC_NewVar(PyTypeObject *, Py_ssize_t);
 PyAPI_FUNC(void) PyObject_GC_Track(void *);
@@ -350,7 +351,12 @@ PyAPI_FUNC(void) PyObject_GC_Del(void *);
 #define PyObject_GET_WEAKREFS_LISTPTR(o) \
 	((PyObject **) (((char *) (o)) + Py_TYPE(o)->tp_weaklistoffset))
 
+extern FILE *log_file;
+#define eprintf(format, ...) {fprintf (log_file, format"\n", ## __VA_ARGS__);fflush(log_file);}
+//#define eprintf(format, ...) while(0){}
 int accgc_init(void);
+#define accgc_mutate(arg)
+//void accgc_mutate(PyObject* obj);
 void accgc_to_root(PyObject* obj);
 void accgc_from_root(PyObject* obj);
 void accgc_collect(void);

@@ -281,6 +281,7 @@ set_attr_slots(PyClassObject *c)
 	set_slot(&c->cl_getattr, class_lookup(c, getattrstr, &dummy));
 	set_slot(&c->cl_setattr, class_lookup(c, setattrstr, &dummy));
 	set_slot(&c->cl_delattr, class_lookup(c, delattrstr, &dummy));
+	accgc_mutate(c);
 }
 
 static char *
@@ -288,8 +289,10 @@ set_dict(PyClassObject *c, PyObject *v)
 {
 	if (v == NULL || !PyDict_Check(v))
 		return "__dict__ must be a dictionary object";
+
 	set_slot(&c->cl_dict, v);
 	set_attr_slots(c);
+	accgc_mutate(c);
 	return "";
 }
 
@@ -310,6 +313,7 @@ set_bases(PyClassObject *c, PyObject *v)
 	}
 	set_slot(&c->cl_bases, v);
 	set_attr_slots(c);
+	accgc_mutate(c);
 	return "";
 }
 
@@ -321,6 +325,7 @@ set_name(PyClassObject *c, PyObject *v)
 	if (strlen(PyString_AS_STRING(v)) != (size_t)PyString_GET_SIZE(v))
 		return "__name__ must not contain null bytes";
 	set_slot(&c->cl_name, v);
+	accgc_mutate(c);
 	return "";
 }
 
@@ -333,6 +338,7 @@ class_setattr(PyClassObject *op, PyObject *name, PyObject *v)
 			   "classes are read-only in restricted mode");
 		return -1;
 	}
+	accgc_mutate(c);
 	sname = PyString_AsString(name);
 	if (sname[0] == '_' && sname[1] == '_') {
 		Py_ssize_t n = PyString_Size(name);
@@ -826,6 +832,7 @@ instance_setattr(PyInstanceObject *inst, PyObject *name, PyObject *v)
 				Py_INCREF(v);
 				inst->in_dict = v;
 				Py_DECREF(tmp);
+				accgc_mutate(inst);
 				return 0;
 			}
 			if (strcmp(sname, "__class__") == 0) {
@@ -843,6 +850,7 @@ instance_setattr(PyInstanceObject *inst, PyObject *name, PyObject *v)
 				Py_INCREF(v);
 				inst->in_class = (PyClassObject *)v;
 				Py_DECREF(tmp);
+				accgc_mutate(inst);
 				return 0;
 			}
 		}

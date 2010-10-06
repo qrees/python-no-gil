@@ -748,12 +748,15 @@ PyAPI_FUNC(void) _Py_AddToAllObjects(PyObject *, int force);
 inline void _atomic_add(volatile int* op, int i);
 inline void _atomic_sub(volatile int*  op, int i);
 	
-Py_ssize_t _Py_AtomicAdd(PyObject* op);
+Py_ssize_t _Py_AtomicAdd(PyObject* op, const char*, int);
 
 Py_ssize_t _Py_AtomicSub(PyObject* op);
 
-#define Py_INCREF(op) _Py_AtomicAdd((PyObject *)(op))
-#define Py_DECREF(op) _Py_AtomicSub((PyObject *)(op))
+//#define Py_INCREF(op) _Py_AtomicAdd((PyObject *)(op))
+//#define Py_DECREF(op) _Py_AtomicSub((PyObject *)(op))
+
+#define Py_INCREF(op) (op)
+#define Py_DECREF(op) (op)
 /*
 #define Py_INCREF(op) (				\
 	_Py_INC_REFTOTAL  _Py_REF_DEBUG_COMMA	\

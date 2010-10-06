@@ -102,7 +102,9 @@ PyCObject_SetVoidPtr(PyObject *self, void *cobj)
 			"Invalid call to PyCObject_SetVoidPtr");
 	return 0;
     }
+
     cself->cobject = cobj;
+	accgc_mutate(cself);
     return 1;
 }
 

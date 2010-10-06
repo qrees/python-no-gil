@@ -1209,13 +1209,15 @@ initzipimport(void)
 					    PyExc_ImportError, NULL);
 	if (ZipImportError == NULL)
 		return;
-
+	
+	accgc_to_root(ZipImportError);
 	Py_INCREF(ZipImportError);
 	if (PyModule_AddObject(mod, "ZipImportError",
 			       ZipImportError) < 0)
 		return;
 
 	Py_INCREF(&ZipImporter_Type);
+	accgc_to_root(&ZipImporter_Type);
 	if (PyModule_AddObject(mod, "zipimporter",
 			       (PyObject *)&ZipImporter_Type) < 0)
 		return;
@@ -1224,6 +1226,7 @@ initzipimport(void)
 	if (zip_directory_cache == NULL)
 		return;
 	Py_INCREF(zip_directory_cache);
+	accgc_to_root(zip_directory_cache);
 	if (PyModule_AddObject(mod, "_zip_directory_cache",
 			       zip_directory_cache) < 0)
 		return;

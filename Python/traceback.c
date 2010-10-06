@@ -217,7 +217,7 @@ _Py_DisplaySourceLine(PyObject *f, const char *filename, int lineno, int indent)
 	return err;
 }
 
-static int
+int
 tb_displayline(PyObject *f, const char *filename, int lineno, const char *name)
 {
 	int err = 0;

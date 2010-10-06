@@ -225,6 +225,7 @@ PyDict_New(void)
 	register PyDictObject *mp;
 	if (dummy == NULL) { /* Auto-initialize dummy */
 		dummy = PyString_FromString("<dummy key>");
+		accgc_to_root(dummy);
 		if (dummy == NULL)
 			return NULL;
 #ifdef SHOW_CONVERSION_COUNTS

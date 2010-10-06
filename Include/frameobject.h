@@ -25,6 +25,7 @@ typedef struct _frame {
        Frame evaluation usually NULLs it, but a frame that yields sets it
        to the current stack top. */
     PyObject **f_stacktop;
+    PyObject **f_currentstack;
     PyObject *f_trace;		/* Trace function */
 
     /* If an exception is raised in this frame, the next three are used to

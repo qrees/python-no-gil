@@ -3,7 +3,7 @@
 
 #include "Python.h"
 #include "frameobject.h"
-
+#include <signal.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -111,8 +111,10 @@ static inline void atomic_sub( volatile PyObject* op, int i) {
 }
 
 
-Py_ssize_t _Py_AtomicAdd(PyObject* op){
+Py_ssize_t _Py_AtomicAdd(PyObject* op, const char * file, int line){
 	atomic_add(op, 1);
+	//raise (SIGUSR1);
+	//printf("Increase for %p in %s at %i\n", op, file, line);
 	return op->ob_refcnt;
 }
 
@@ -1433,8 +1435,8 @@ PyObject_GenericGetAttr(PyObject *obj, PyObject *name)
 		if (PyType_Ready(tp) < 0)
 			goto done;
 	}
-if(accgc_run)
-	printf("Calling _PyType_Lookup after accgc_collect\n");
+
+	
 #if 0 /* XXX this is not quite _PyType_Lookup anymore */
 	/* Inline _PyType_Lookup */
 	{
