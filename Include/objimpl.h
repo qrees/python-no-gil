@@ -352,8 +352,11 @@ PyAPI_FUNC(void) PyObject_GC_Del(void *);
 	((PyObject **) (((char *) (o)) + Py_TYPE(o)->tp_weaklistoffset))
 
 extern FILE *log_file;
-#define eprintf(format, ...) {fprintf (log_file, format"\n", ## __VA_ARGS__);fflush(log_file);}
-//#define eprintf(format, ...) while(0){}
+extern int alloc_count;
+
+//#define eprintf(format, ...) {fprintf (log_file, format"\n", ## __VA_ARGS__);fflush(log_file);}
+#define eprintf(format, ...) while(0){}
+
 int accgc_init(void);
 #define accgc_mutate(arg)
 //void accgc_mutate(PyObject* obj);

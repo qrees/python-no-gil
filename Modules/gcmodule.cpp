@@ -1830,7 +1830,7 @@ _PyObject_GC_Malloc(size_t basicsize)
 	};
 	*/
 	op = FROM_GC(g);
-	eprintf("Allocated object %p", op);
+	//eprintf("Allocated object %p", op);
 	return op;
 }
 
@@ -1879,7 +1879,6 @@ _PyObject_GC_Resize(PyVarObject *op, Py_ssize_t nitems)
 void
 PyObject_GC_Del(void *op)
 {
-	eprintf("Deallocate object %p", op);
 	if(accgc_roots.count((PyObject*)op))
 		accgc_from_root((PyObject*)op);
 	PyGC_Head *g = AS_GC(op);

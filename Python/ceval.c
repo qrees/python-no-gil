@@ -812,7 +812,11 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 		why = WHY_EXCEPTION;
 		goto on_error;
 	}
-	accgc_collect();
+
+	if(alloc_count > 1000){
+		alloc_count = 0;
+		accgc_collect();
+	}
 	
 	for (;;) {
 #ifdef WITH_TSC

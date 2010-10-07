@@ -7,7 +7,7 @@ i = 0
 def fun():
     a = 1
 
-while True:
+while i < 1000000:
     fun()
     i += 1
 

@@ -35,7 +35,7 @@ PyModule_New(const char *name)
 		goto fail;
 	Py_DECREF(nameobj);
 	PyObject_GC_Track(m);
-	printf("New module %p %s\n", m, name);
+	//printf("New module %p %s\n", m, name);
 	return (PyObject *)m;
 
  fail:
