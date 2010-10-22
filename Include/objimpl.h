@@ -186,10 +186,6 @@ PyAPI_FUNC(PyVarObject *) _PyObject_NewVar(PyTypeObject *, Py_ssize_t);
 ( (type *) PyObject_Init( \
 	(PyObject *) PyObject_MALLOC( _PyObject_SIZE(typeobj) ), (typeobj)) )
 
-#define PyObject_NEW(type, typeobj) \
-( (type *) PyObject_Init( \
-	(PyObject *) PyObject_MALLOC( _PyObject_SIZE(typeobj) ), (typeobj)) )
-
 #define PyObject_NEW_VAR(type, typeobj, n) \
 ( (type *) PyObject_InitVar( \
       (PyVarObject *) PyObject_MALLOC(_PyObject_VAR_SIZE((typeobj),(n)) ),\
@@ -253,21 +249,11 @@ typedef union _gc_head {
 		union _gc_head *gc_prev;
 		Py_ssize_t gc_refs;
 		void* color;
-		void * curr_node;
 		int root;
 	} gc;
 	long double dummy;
 } PyGC_Head;
 
-/* GC information is stored BEFORE the object structure. */
-/*
-typedef union _accgc_head {
-	struct {
-		char color;
-	} gc;
-	long double dummy;
-} PyACCGC_Head;
-*/
 extern PyGC_Head *_PyGC_generation0;
 
 #define _Py_AS_GC(o) ((PyGC_Head *)(o)-1)
@@ -294,24 +280,14 @@ extern PyGC_Head *_PyGC_generation0;
  * way to provoke memory errors if calling code is confused.
  */
 #define _PyObject_GC_UNTRACK(o)
-/*
-#define _PyObject_GC_UNTRACK(o) do { \
-	PyACCGC_Head *g = _Py_AS_GC(o); \
-	assert(g->gc.gc_refs != _PyGC_REFS_UNTRACKED); \
-	g->gc.gc_refs = _PyGC_REFS_UNTRACKED; \
-	g->gc.gc_prev->gc.gc_next = g->gc.gc_next; \
-	g->gc.gc_next->gc.gc_prev = g->gc.gc_prev; \
-	g->gc.gc_next = NULL; \
-    } while (0);
-*/
 
-PyAPI_FUNC(PyObject *) _PyObject_GC_Malloc(size_t);
 PyAPI_FUNC(PyObject *) _PyObject_GC_Malloc(size_t);
 PyAPI_FUNC(PyObject *) _PyObject_GC_New(PyTypeObject *);
 PyAPI_FUNC(PyVarObject *) _PyObject_GC_NewVar(PyTypeObject *, Py_ssize_t);
-PyAPI_FUNC(void) PyObject_GC_Track(void *);
-PyAPI_FUNC(void) PyObject_GC_UnTrack(void *);
 PyAPI_FUNC(void) PyObject_GC_Del(void *);
+
+#define PyObject_GC_Track(obj)
+#define PyObject_GC_UnTrack(obj)
 
 #define PyObject_GC_New(type, typeobj) \
 		( (type *) _PyObject_GC_New(typeobj) )
@@ -354,8 +330,8 @@ PyAPI_FUNC(void) PyObject_GC_Del(void *);
 extern FILE *log_file;
 extern int alloc_count;
 
-//#define eprintf(format, ...) {fprintf (log_file, format"\n", ## __VA_ARGS__);fflush(log_file);}
-#define eprintf(format, ...) while(0){}
+#define eprintf(format, ...) {fprintf (log_file, "%i:"format"\n", pthread_self(), ## __VA_ARGS__);}
+//#define eprintf(format, ...) {}
 
 int accgc_init(void);
 #define accgc_mutate(arg)
@@ -365,6 +341,17 @@ void accgc_from_root(PyObject* obj);
 void accgc_collect(void);
 int accgc_method_cache_traverse(visitproc , void* );
 
+#define SPINLOCK_INIT(arg) pthread_spinlock_t arg = 1
+#define SPINLOCK(arg) pthread_spinlock_t arg
+#define ACCGC_LOCK(arg) pthread_spin_lock(&(arg))
+#define ACCGC_UNLOCK(arg) pthread_spin_unlock(&(arg))
+
+/*
+ * If defined, GC will collect statistics about what types are used.
+ * 
+ * #define ACCGC_COUNT_TYPES
+ */
+#define ACCGC_COUNTERS
 #ifdef __cplusplus
 }
 #endif

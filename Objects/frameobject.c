@@ -476,11 +476,6 @@ frame_traverse(PyFrameObject *f, visitproc visit, void *arg)
 			Py_VISIT(*p);
 		}
 	}
-	/* stack */
-	/*if (f->f_stacktop != NULL) {
-		for (p = f->f_valuestack; p < f->f_stacktop; p++)
-			Py_VISIT(*p);
-	}*/
 	return 0;
 }
 

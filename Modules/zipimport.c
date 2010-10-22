@@ -1209,7 +1209,7 @@ initzipimport(void)
 					    PyExc_ImportError, NULL);
 	if (ZipImportError == NULL)
 		return;
-	
+
 	accgc_to_root(ZipImportError);
 	Py_INCREF(ZipImportError);
 	if (PyModule_AddObject(mod, "ZipImportError",

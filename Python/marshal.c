@@ -1103,10 +1103,10 @@ PyMarshal_ReadObjectFromString(char *str, Py_ssize_t len)
 	rf.ptr = str;
 	rf.end = str + len;
 	rf.strings = PyList_New(0);
-	accgc_to_root(rf.strings);
+//	accgc_to_root(rf.strings);
 	rf.depth = 0;
 	result = r_object(&rf);
-	accgc_from_root(rf.strings);
+//	accgc_from_root(rf.strings);
 	Py_DECREF(rf.strings);
 	return result;
 }

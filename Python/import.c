@@ -3310,7 +3310,8 @@ initimp(void)
 
 	if (PyType_Ready(&PyNullImporter_Type) < 0)
 		goto failure;
-
+	accgc_to_root(&PyNullImporter_Type);
+	
 	m = Py_InitModule4("imp", imp_methods, doc_imp,
 			   NULL, PYTHON_API_VERSION);
 	if (m == NULL)

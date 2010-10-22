@@ -477,12 +477,12 @@ _add_one_to_index_C(int nd, Py_ssize_t *index, Py_ssize_t *shape)
   */
 
 int
-PyBuffer_ToContiguous(void *buf_, Py_buffer *view, Py_ssize_t len, char fort)
+PyBuffer_ToContiguous(void *buf, Py_buffer *view, Py_ssize_t len, char fort)
 {
 	int k;
 	void (*addone)(int, Py_ssize_t *, Py_ssize_t *);
 	Py_ssize_t *indices, elements;
-	char *dest, *ptr, *buf = (char*)buf_;
+	char *dest, *ptr;
 
 	if (len > view->len) {
 		len = view->len;
@@ -519,7 +519,7 @@ PyBuffer_ToContiguous(void *buf_, Py_buffer *view, Py_ssize_t len, char fort)
 	elements = len / view->itemsize;
 	while (elements--) {
 		addone(view->ndim, indices, view->shape);
-		ptr =(char*) PyBuffer_GetPointer(view, indices);
+		ptr = PyBuffer_GetPointer(view, indices);
 		memcpy(dest, ptr, view->itemsize);
 		dest += view->itemsize;
 	}
@@ -563,14 +563,14 @@ PyBuffer_FromContiguous(Py_buffer *view, void *buf, Py_ssize_t len, char fort)
 	else {
 		addone = _add_one_to_index_C;
 	}
-	src = (char*)buf;
+	src = buf;
 	/* XXX : This is not going to be the fastest code in the world
 		 several optimizations are possible.
 	 */
 	elements = len / view->itemsize;
 	while (elements--) {
 		addone(view->ndim, indices, view->shape);
-		ptr = (char*)PyBuffer_GetPointer(view, indices);
+		ptr = PyBuffer_GetPointer(view, indices);
 		memcpy(ptr, src, view->itemsize);
 		src += view->itemsize;
 	}
@@ -639,8 +639,8 @@ int PyObject_CopyData(PyObject *dest, PyObject *src)
 	}
 	while (elements--) {
 		_add_one_to_index_C(view_src.ndim, indices, view_src.shape);
-		dptr = (char*)PyBuffer_GetPointer(&view_dest, indices);
-		sptr = (char*)PyBuffer_GetPointer(&view_src, indices);
+		dptr = PyBuffer_GetPointer(&view_dest, indices);
+		sptr = PyBuffer_GetPointer(&view_src, indices);
 		memcpy(dptr, sptr, view_src.itemsize);
 	}
 	PyMem_Free(indices);

@@ -84,7 +84,6 @@ PyString_FromStringAndSize(const char *str, Py_ssize_t size)
 	op = (PyStringObject *)_PyObject_GC_Malloc(sizeof(PyStringObject) + size);
 	if (op == NULL)
 		return PyErr_NoMemory();
-	PyObject_GC_Track(op);
 
 	PyObject_INIT_VAR(op, &PyString_Type, size);
 	op->ob_shash = -1;
@@ -142,8 +141,6 @@ PyString_FromString(const char *str)
 	op = (PyStringObject *)_PyObject_GC_Malloc(sizeof(PyStringObject) + size);
 	if (op == NULL)
 		return PyErr_NoMemory();
-	PyObject_GC_Track(op);
-	
 	PyObject_INIT_VAR(op, &PyString_Type, size);
 	op->ob_shash = -1;
 	op->ob_sstate = SSTATE_NOT_INTERNED;
@@ -1009,8 +1006,6 @@ string_concat(register PyStringObject *a, register PyObject *bb)
 	op = (PyStringObject *)_PyObject_GC_Malloc(sizeof(PyStringObject) + size);
 	if (op == NULL)
 		return PyErr_NoMemory();
-	PyObject_GC_Track(op);
-	
 	PyObject_INIT_VAR(op, &PyString_Type, size);
 	op->ob_shash = -1;
 	op->ob_sstate = SSTATE_NOT_INTERNED;
@@ -1055,8 +1050,6 @@ string_repeat(register PyStringObject *a, register Py_ssize_t n)
 	op = (PyStringObject *)_PyObject_GC_Malloc(sizeof(PyStringObject) + size);
 	if (op == NULL)
 		return PyErr_NoMemory();
-	PyObject_GC_Track(op);
-	
 	PyObject_INIT_VAR(op, &PyString_Type, size);
 	op->ob_shash = -1;
 	op->ob_sstate = SSTATE_NOT_INTERNED;
@@ -4294,8 +4287,6 @@ _PyString_Resize(PyObject **pv, Py_ssize_t newsize)
 		PyErr_NoMemory();
 		return -1;
 	}
-	//PyObject_GC_Track(*pv);
-	
 	_Py_NewReference(*pv);
 	sv = (PyStringObject *) *pv;
 	Py_SIZE(sv) = newsize;

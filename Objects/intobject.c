@@ -49,6 +49,7 @@ fill_free_list(void)
 	PyIntObject *p, *q;
 	/* Python's object allocator isn't appropriate for large blocks. */
 	p = (PyIntObject *) PyMem_MALLOC(sizeof(PyIntBlock));
+	
 	if (p == NULL)
 		return (PyIntObject *) PyErr_NoMemory();
 	((PyIntBlock *)p)->next = block_list;
@@ -107,6 +108,7 @@ PyInt_FromLong(long ival)
 	free_list = (PyIntObject *)Py_TYPE(v);
 	PyObject_INIT(v, &PyInt_Type);
 	v->ob_ival = ival;
+	accgc_to_root(v);
 	return (PyObject *) v;
 }
 
@@ -1291,6 +1293,7 @@ _PyInt_Init(void)
 		PyObject_INIT(v, &PyInt_Type);
 		v->ob_ival = ival;
 		small_ints[ival + NSMALLNEGINTS] = v;
+		accgc_to_root(v);
 	}
 #endif
 	return 1;

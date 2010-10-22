@@ -410,27 +410,6 @@ Py_Finalize(void)
 	/* Clear type lookup cache */
 	PyType_ClearCache();
 
-	/* Collect garbage.  This may call finalizers; it's nice to call these
-	 * before all modules are destroyed.
-	 * XXX If a __del__ or weakref callback is triggered here, and tries to
-	 * XXX import a module, bad things can happen, because Python no
-	 * XXX longer believes it's initialized.
-	 * XXX     Fatal Python error: Interpreter not initialized (version mismatch?)
-	 * XXX is easy to provoke that way.  I've also seen, e.g.,
-	 * XXX     Exception exceptions.ImportError: 'No module named sha'
-	 * XXX         in <function callback at 0x008F5718> ignored
-	 * XXX but I'm unclear on exactly how that one happens.  In any case,
-	 * XXX I haven't seen a real-life report of either of these.
-	 */
-	PyGC_Collect();
-#ifdef COUNT_ALLOCS
-	/* With COUNT_ALLOCS, it helps to run GC multiple times:
-	   each collection might release some types from the type
-	   list, so they become garbage. */
-	while (PyGC_Collect() > 0)
-		/* nothing */;
-#endif
-
 	/* Destroy all modules */
 	PyImport_Cleanup();
 
@@ -1319,10 +1298,9 @@ PyRun_FileExFlags(FILE *fp, const char *filename, int start, PyObject *globals,
 		PyArena_Free(arena);
 		return NULL;
 	}
-	eprintf("Running: %s\n", filename);
+	printf("Running: %s\n", filename);
 	accgc_enable = 1;
 	ret = run_mod(mod, filename, globals, locals, flags, arena);
-	fflush(stdout);
 	PyArena_Free(arena);
 	return ret;
 }

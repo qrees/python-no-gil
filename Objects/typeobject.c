@@ -767,10 +767,9 @@ PyType_GenericAlloc(PyTypeObject *type, Py_ssize_t nitems)
 	const size_t size = _PyObject_VAR_SIZE(type, nitems+1);
 	/* note that we need to add one, for the sentinel */
 
-	if (PyType_IS_GC(type)){
-		
+	if (PyType_IS_GC(type))
 		obj = _PyObject_GC_Malloc(size);
-	}else
+	else
 		obj = (PyObject *)PyObject_MALLOC(size);
 
 	if (obj == NULL)
@@ -1562,7 +1561,6 @@ mro_implementation(PyTypeObject *type)
 	n = PyTuple_GET_SIZE(bases);
 
 	to_merge = PyList_New(n+1);
-
 	if (to_merge == NULL)
 		return NULL;
 
@@ -1594,6 +1592,7 @@ mro_implementation(PyTypeObject *type)
 		return NULL;
 	}
 	PyList_SET_ITEM(to_merge, n, bases_aslist);
+
 	result = Py_BuildValue("[O]", (PyObject *)type);
 	if (result == NULL) {
 		Py_DECREF(to_merge);
@@ -2463,6 +2462,7 @@ type_new(PyTypeObject *metatype, PyObject *args, PyObject *kwds)
 
 	/* Put the proper slots in place */
 	fixup_slot_dispatchers(type);
+
 	return (PyObject *)type;
 }
 
@@ -2498,18 +2498,18 @@ _PyType_Lookup(PyTypeObject *type, PyObject *name)
 	n = PyTuple_GET_SIZE(mro);
 	for (i = 0; i < n; i++) {
 		base = PyTuple_GET_ITEM(mro, i);
-		if (PyClass_Check(base)){
+		if (PyClass_Check(base))
 			dict = ((PyClassObject *)base)->cl_dict;
-		} else {
+		else {
 			assert(PyType_Check(base));
 			dict = ((PyTypeObject *)base)->tp_dict;
 		}
 		assert(dict && PyDict_Check(dict));
 		res = PyDict_GetItem(dict, name);
-		if (res != NULL){
+		if (res != NULL)
 			break;
-		}
 	}
+
 	if (MCACHE_CACHEABLE_NAME(name) && assign_version_tag(type)) {
 		h = MCACHE_HASH_METHOD(type, name);
 		method_cache[h].version = type->tp_version_tag;
@@ -2681,9 +2681,6 @@ PyDoc_STRVAR(type_doc,
 static int
 type_traverse(PyTypeObject *type, visitproc visit, void *arg)
 {
-	/* Because of type_is_gc(), the collector only calls this
-	   for heaptypes. */
-	//assert(type->tp_flags & Py_TPFLAGS_HEAPTYPE);
 
 	Py_VISIT(type->tp_dict);
 	Py_VISIT(type->tp_cache);

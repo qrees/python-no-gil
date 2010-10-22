@@ -138,7 +138,7 @@ EXEMODE=	755
 FILEMODE=	644
 
 # configure script arguments
-CONFIG_ARGS=	 '--with-pydebug'
+CONFIG_ARGS=	 '--with-pydebug' '--with-threads'
 
 
 # Subdirectories with code
@@ -584,7 +584,7 @@ Python/pystate.o: $(srcdir)/Python/pystate.cpp $(srcdir)/Include/pythread.h
 	$(CXX) -c $(PY_CXXFLAGS) -o $@ $<
 
 Modules/gcmodule.o: $(srcdir)/Modules/gcmodule.cpp
-    $(CXX) -c $(PY_CXXFLAGS) -Wno-deprecated -o $@ $<
+	$(CXX) -c $(PY_CXXFLAGS) -Wno-deprecated -o $@ $<
 
 ############################################################################
 # Header files

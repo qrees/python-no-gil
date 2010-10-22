@@ -693,7 +693,7 @@ PyAPI_FUNC(PyObject *) _PySet_Dummy(void);
 PyAPI_FUNC(Py_ssize_t) _Py_GetRefTotal(void);
 #define _Py_INC_REFTOTAL	_Py_RefTotal++
 #define _Py_DEC_REFTOTAL	_Py_RefTotal--
-#define _Py_REF_DEBUG_COMMA ,
+#define _Py_REF_DEBUG_COMMA	,
 #define _Py_CHECK_REFCNT(OP)					\
 {	if (((PyObject*)OP)->ob_refcnt < 0)				\
 		_Py_NegativeRefcount(__FILE__, __LINE__,	\
@@ -748,27 +748,13 @@ PyAPI_FUNC(void) _Py_AddToAllObjects(PyObject *, int force);
 inline void _atomic_add(volatile int* op, int i);
 inline void _atomic_sub(volatile int*  op, int i);
 	
-Py_ssize_t _Py_AtomicAdd(PyObject* op, const char*, int);
+inline Py_ssize_t _Py_AtomicAdd(PyObject* op);
 
-Py_ssize_t _Py_AtomicSub(PyObject* op);
+inline Py_ssize_t _Py_AtomicSub(PyObject* op);
 
-//#define Py_INCREF(op) _Py_AtomicAdd((PyObject *)(op))
-//#define Py_DECREF(op) _Py_AtomicSub((PyObject *)(op))
+#define Py_INCREF(op) (1) //_Py_AtomicAdd((PyObject *)(op))
+#define Py_DECREF(op) (op) //_Py_AtomicSub((PyObject *)(op))
 
-#define Py_INCREF(op) (op)
-#define Py_DECREF(op) (op)
-/*
-#define Py_INCREF(op) (				\
-	_Py_INC_REFTOTAL  _Py_REF_DEBUG_COMMA	\
-	(_Py_AtomicAdd((PyObject *)op)))
-
-#define Py_DECREF(op)					\
-	if (_Py_DEC_REFTOTAL _Py_REF_DEBUG_COMMA	\
-		_Py_AtomicSub((PyObject *)op) != 0)		\
-		_Py_CHECK_REFCNT(op)			//\
-	else						\
-		_Py_Dealloc((PyObject *)(op))
-*/
 
 /* Safely decref `op` and set `op` to NULL, especially useful in tp_clear
  * and tp_dealloc implementatons.

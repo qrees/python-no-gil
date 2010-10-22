@@ -4,6 +4,7 @@
 
 #ifndef Py_PYSTATE_H
 #define Py_PYSTATE_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -95,7 +96,7 @@ typedef struct _ts {
 
     PyObject *async_exc; /* Asynchronous exception to raise */
     long thread_id; /* Thread id where this tstate was created */
-
+    pthread_mutex_t thread_mutex;
     /* XXX signal handlers should also be here */
 
 } PyThreadState;
@@ -122,11 +123,7 @@ PyAPI_FUNC(int) PyThreadState_SetAsyncExc(long, PyObject *);
 
 PyAPI_DATA(PyThreadState *) _PyThreadState_Current;
 
-#ifdef Py_DEBUG
 #define PyThreadState_GET() PyThreadState_Get()
-#else
-#define PyThreadState_GET() (_PyThreadState_Current)
-#endif
 
 typedef
     enum {PyGILState_LOCKED, PyGILState_UNLOCKED}

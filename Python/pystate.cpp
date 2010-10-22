@@ -52,7 +52,7 @@ static int autoTLSkey = 0;
 
 static PyInterpreterState *interp_head = NULL;
 
-//PyThreadState *_PyThreadState_Current = NULL;
+PyThreadState *_PyThreadState_Current = NULL;
 PyThreadFrameGetter _PyThreadState_GetFrame = NULL;
 
 #ifdef WITH_THREAD
@@ -217,7 +217,8 @@ PyThreadState_New(PyInterpreterState *interp)
 #ifdef WITH_THREAD
 		_PyGILState_NoteThreadState(tstate);
 #endif
-
+		tstate->thread_mutex = PTHREAD_MUTEX_INITIALIZER;
+		pthread_mutex_lock(&tstate->thread_mutex);
 		HEAD_LOCK();
 		tstate->next = interp->tstate_head;
 		interp->tstate_head = tstate;
@@ -297,8 +298,6 @@ tstate_delete_common(PyThreadState *tstate)
 void
 PyThreadState_Delete(PyThreadState *tstate)
 {
-	//if (tstate == _PyThreadState_Current)
-	//	Py_FatalError("PyThreadState_Delete: tstate is still current");
 	tstate_delete_common(tstate);
 #ifdef WITH_THREAD
 	if (autoTLSkey && PyThread_get_key_value(autoTLSkey) == tstate)
@@ -312,12 +311,10 @@ void
 PyThreadState_DeleteCurrent()
 {
 	pthread_t tid = pthread_self();
-	//return _ThreadsStates[tid];
 	PyThreadState *tstate = _ThreadsStates[tid];
 	if (tstate == NULL)
 		Py_FatalError(
 			"PyThreadState_DeleteCurrent: no current tstate");
-	//_PyThreadState_Current = NULL;
 	tstate_delete_common(tstate);
 	if (autoTLSkey && PyThread_get_key_value(autoTLSkey) == tstate)
 		PyThread_delete_key_value(autoTLSkey);
@@ -505,8 +502,8 @@ PyThreadState_IsCurrent(PyThreadState *tstate)
 	/* On Windows at least, simple reads and writes to 32 bit values
 	   are atomic.
 	*/
-	return true;
-	//return tstate == _PyThreadState_Current;
+	pthread_t tid = pthread_self();
+	return tstate == _ThreadsStates[tid];
 }
 
 /* Internal initialization/finalization functions called by

@@ -2620,6 +2620,7 @@ _PyBuiltin_Init(void)
 #define SETBUILTIN(NAME, OBJECT) \
 	if (PyDict_SetItemString(dict, NAME, (PyObject *)OBJECT) < 0)	\
 		return NULL;						\
+	accgc_to_root(OBJECT);	\
 	ADD_TO_ALL(OBJECT)
 
 	SETBUILTIN("None",		Py_None);

@@ -1611,7 +1611,7 @@ PyTokenizer_RestoreEncoding(struct tok_state* tok, int len, int *offset)
 		if (lineobj != NULL) {
 			int linelen = PyString_Size(lineobj);
 			const char *line = PyString_AsString(lineobj);
-			text = (char*)PyObject_MALLOC(linelen + 1);
+			text = PyObject_MALLOC(linelen + 1);
 			if (text != NULL && line != NULL) {
 				if (linelen)
 					strncpy(text, line, linelen);

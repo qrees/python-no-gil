@@ -227,44 +227,33 @@ PyEval_InitThreads(void)
 	if (interpreter_lock)
 		return;
 	interpreter_lock = PyThread_allocate_lock();
-	//PyThread_acquire_lock(interpreter_lock, 1);
 	main_thread = PyThread_get_thread_ident();
 }
 
 void
 PyEval_AcquireLock(void)
 {
-	//PyThread_acquire_lock(interpreter_lock, 1);
+
 }
 
 void
 PyEval_ReleaseLock(void)
 {
-	//PyThread_release_lock(interpreter_lock);
 }
 
 void
 PyEval_AcquireThread(PyThreadState *tstate)
 {
-	//printf("PyEval_AcquireThread %p\n", tstate);
 	if (tstate == NULL)
 		Py_FatalError("PyEval_AcquireThread: NULL new thread state");
 	/* Check someone has called PyEval_InitThreads() to create the lock */
 	assert(interpreter_lock);
-	//PyThread_acquire_lock(interpreter_lock, 1);
-	//if (PyThreadState_Swap(tstate) != NULL)
-	//	Py_FatalError(
-	//		"PyEval_AcquireThread: non-NULL old thread state");
 }
 
 void
 PyEval_ReleaseThread(PyThreadState *tstate)
 {
-	//if (tstate == NULL)
-	//	Py_FatalError("PyEval_ReleaseThread: NULL thread state");
-	//if (PyThreadState_Swap(NULL) != tstate)
-	//	Py_FatalError("PyEval_ReleaseThread: wrong thread state");
-	//PyThread_release_lock(interpreter_lock);
+	
 }
 
 /* This function is called from PyOS_AfterFork to ensure that newly
@@ -285,7 +274,6 @@ PyEval_ReInitThreads(void)
 	  adding a new function to each thread_*.h.  Instead, just
 	  create a new lock and waste a little bit of memory */
 	interpreter_lock = PyThread_allocate_lock();
-	//PyThread_acquire_lock(interpreter_lock, 1);
 	main_thread = PyThread_get_thread_ident();
 
 	/* Update the threading module with the new state.
@@ -314,32 +302,12 @@ PyEval_ReInitThreads(void)
 PyThreadState *
 PyEval_SaveThread(void)
 {
-	//printf("PyEval_SaveThread\n");
-	//PyThreadState *tstate = PyThreadState_Swap(NULL);
-	//if (tstate == NULL)
-	//	Py_FatalError("PyEval_SaveThread: NULL tstate");
-#ifdef WITH_THREAD
-	//if (interpreter_lock)
-	//	PyThread_release_lock(interpreter_lock);
-#endif
 	return NULL;
-	//return tstate;
 }
 
 void
 PyEval_RestoreThread(PyThreadState *tstate)
-{/*
-	if (tstate == NULL)
-		Py_FatalError("PyEval_RestoreThread: NULL tstate");
-#ifdef WITH_THREAD
-	if (interpreter_lock) {
-		int err = errno;
-		//PyThread_acquire_lock(interpreter_lock, 1);
-		errno = err;
-	}
-#endif
-	PyThreadState_Swap(tstate);
-	*/
+{
 }
 
 
@@ -773,7 +741,6 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 	fastlocals = f->f_localsplus;
 	freevars = f->f_localsplus + co->co_nlocals;
 	first_instr = (unsigned char*) PyString_AS_STRING(co->co_code);
-
 	/* An explanation is in order for the next line.
 
 	   f->f_lasti now refers to the index of the last instruction
@@ -799,9 +766,6 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 #if defined(Py_DEBUG) || defined(LLTRACE)
 	filename = PyString_AsString(co->co_filename);
 #endif
-#ifdef LLTRACE
-	lltrace = PyDict_GetItemString(f->f_globals, "__lltrace__") != NULL;
-#endif
 
 	why = WHY_NOT;
 	err = 0;
@@ -813,12 +777,12 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 		goto on_error;
 	}
 
-	if(alloc_count > 1000){
-		alloc_count = 0;
-		accgc_collect();
-	}
-	
 	for (;;) {
+		/*
+		if(alloc_count > 10000){
+			accgc_collect();
+			alloc_count = 0;
+		}*/
 #ifdef WITH_TSC
 		if (inst1 == 0) {
 			/* Almost surely, the opcode executed a break
@@ -846,8 +810,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 		   event needs attention (e.g. a signal handler or
 		   async I/O handler); see Py_AddPendingCall() and
 		   Py_MakePendingCalls() above. */
-		
-		
+
 		if (--_Py_Ticker < 0) {
 			if (*next_instr == SETUP_FINALLY) {
 				/* Make the last opcode before
@@ -875,15 +838,11 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 			if (interpreter_lock) {
 				/* Give another thread a chance */
 
-				//if (PyThreadState_Swap(NULL) != tstate)
-				//	Py_FatalError("ceval: tstate mix-up");
 				PyThread_release_lock(interpreter_lock);
 
 				/* Other threads may run now */
 
 				PyThread_acquire_lock(interpreter_lock, 1);
-				//if (PyThreadState_Swap(tstate) != NULL)
-				//	Py_FatalError("ceval: orphan tstate");
 
 				/* Check for thread interrupts */
 
@@ -900,6 +859,10 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 		}
 
 	fast_next_opcode:
+		if(alloc_count > 10000){
+			accgc_collect();
+			alloc_count = 0;
+		}
 		f->f_currentstack = stack_pointer;
 	
 		f->f_lasti = INSTR_OFFSET();
@@ -2532,7 +2495,6 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 			goto dispatch_opcode;
 
 		default:
-			printf("Failed at code object: %p\n", f->f_code);
 			fprintf(stderr,
 				"XXX lineno: %d, opcode: %d\n",
 				PyCode_Addr2Line(f->f_code, f->f_lasti),
@@ -2739,7 +2701,7 @@ fast_yield:
 exit_eval_frame:
 	Py_LeaveRecursiveCall();
 	tstate->frame = f->f_back;
-	
+
 	return retval;
 }
 
@@ -2769,7 +2731,6 @@ PyEval_EvalCodeEx(PyCodeObject *co, PyObject *globals, PyObject *locals,
 	f = PyFrame_New(tstate, co, globals, locals);
 	if (f == NULL)
 		return NULL;
-	//printf("{");
 
 	fastlocals = f->f_localsplus;
 	freevars = f->f_localsplus + co->co_nlocals;
@@ -2992,7 +2953,6 @@ fail: /* Jump here from prelude on failure */
 	assert(tstate != NULL);
 	++tstate->recursion_depth;
 	Py_DECREF(f);
-//	printf("}");
 	--tstate->recursion_depth;
 	return retval;
 }

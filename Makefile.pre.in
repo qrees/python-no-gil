@@ -583,6 +583,9 @@ Python/formatter_string.o: $(srcdir)/Python/formatter_string.c \
 Python/pystate.o: $(srcdir)/Python/pystate.cpp $(srcdir)/Include/pythread.h
 	$(CXX) -c $(PY_CXXFLAGS) -o $@ $<
 
+Modules/gcmodule.o: $(srcdir)/Modules/gcmodule.cpp
+	$(CXX) -c $(PY_CXXFLAGS) -Wno-deprecated -o $@ $<
+
 ############################################################################
 # Header files
 

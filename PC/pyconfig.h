@@ -29,7 +29,6 @@ MS_CORE_DLL.
 WIN32 is still required for the locale module.
 
 */
-#define _DEBUG
 
 #ifdef _WIN32_WCE
 #define MS_WINCE

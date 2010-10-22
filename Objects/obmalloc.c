@@ -208,11 +208,11 @@
 /*
  * Python's threads are serialized, so object malloc locking is disabled.
  */
-#define SIMPLELOCK_DECL(lock)	/* simple lock declaration		*/
+#define SIMPLELOCK_DECL(lock)	pthread_spinlock_t lock = 1;/* simple lock declaration		*/
 #define SIMPLELOCK_INIT(lock)	/* allocate (if needed) and initialize	*/
 #define SIMPLELOCK_FINI(lock)	/* free/destroy an existing lock 	*/
-#define SIMPLELOCK_LOCK(lock)	/* acquire released lock */
-#define SIMPLELOCK_UNLOCK(lock)	/* release acquired lock */
+#define SIMPLELOCK_LOCK(lock)	pthread_spin_lock(&lock)/* acquire released lock */
+#define SIMPLELOCK_UNLOCK(lock)	pthread_spin_unlock(&lock)/* release acquired lock */
 
 /*
  * Basic types
@@ -729,6 +729,7 @@ PyObject_Malloc(size_t nbytes)
 	poolp pool;
 	poolp next;
 	uint size;
+	int a;
 
 	/*
 	 * Limit ourselves to PY_SSIZE_T_MAX bytes to prevent security holes.
@@ -759,6 +760,7 @@ PyObject_Malloc(size_t nbytes)
 			assert(bp != NULL);
 			if ((pool->freeblock = *(block **)bp) != NULL) {
 				UNLOCK();
+				goto return_bp;
 				return (void *)bp;
 			}
 			/*
@@ -779,6 +781,7 @@ PyObject_Malloc(size_t nbytes)
 			next->prevpool = pool;
 			pool->nextpool = next;
 			UNLOCK();
+			goto return_bp;
 			return (void *)bp;
 		}
 
@@ -857,6 +860,7 @@ PyObject_Malloc(size_t nbytes)
 				bp = pool->freeblock;
 				pool->freeblock = *(block **)bp;
 				UNLOCK();
+				goto return_bp;
 				return (void *)bp;
 			}
 			/*
@@ -872,6 +876,7 @@ PyObject_Malloc(size_t nbytes)
 			pool->freeblock = bp + size;
 			*(block **)(pool->freeblock) = NULL;
 			UNLOCK();
+			goto return_bp;
 			return (void *)bp;
 		}
 
@@ -912,7 +917,11 @@ redirect:
 	 */
 	if (nbytes == 0)
 		nbytes = 1;
-	return (void *)malloc(nbytes);
+	bp = (void *)malloc(nbytes);
+	//return (void *)malloc(nbytes);
+return_bp:
+	a=1;
+	return (void *)bp;
 }
 
 /* free */
@@ -931,7 +940,6 @@ PyObject_Free(void *p)
 	if (p == NULL)	/* free(NULL) has no effect */
 		return;
 
-	//raise (SIGUSR1);
 	pool = POOL_ADDR(p);
 	if (Py_ADDRESS_IN_RANGE(p, pool)) {
 		/* We allocated this address. */

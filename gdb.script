@@ -9,11 +9,18 @@ commands
     my_bt
 end
 condition 1
-break Modules/gcmodule.cpp:1822
+break Objects/obmalloc.c:923
 commands
     silent
-    printf "# -> Allocated %p\n",op
+    printf "# -> Allocated %p\n",bp
     my_bt
 end
 condition 2
+#break Modules/gcmodule.cpp:1734
+#commands
+#    silent
+#    printf "# -> Allocated %p\n",op
+#    my_bt
+#end
+#condition 2
 run prog.py > prog.log

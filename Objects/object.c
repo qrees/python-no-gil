@@ -57,11 +57,9 @@ static PyObject refchain = {&refchain, &refchain};
 void
 _Py_AddToAllObjects(PyObject *op, int force)
 {
+	/*
 #ifdef  Py_DEBUG
 	if (!force) {
-		/* If it's initialized memory, op must be in or out of
-		 * the list unambiguously.
-		 */
 		assert((op->_ob_prev == NULL) == (op->_ob_next == NULL));
 	}
 #endif
@@ -70,7 +68,7 @@ _Py_AddToAllObjects(PyObject *op, int force)
 		op->_ob_prev = &refchain;
 		refchain._ob_next->_ob_prev = op;
 		refchain._ob_next = op;
-	}
+	}*/
 }
 #endif	/* Py_TRACE_REFS */
 
@@ -111,19 +109,15 @@ static inline void atomic_sub( volatile PyObject* op, int i) {
 }
 
 
-Py_ssize_t _Py_AtomicAdd(PyObject* op, const char * file, int line){
-	atomic_add(op, 1);
-	//raise (SIGUSR1);
-	//printf("Increase for %p in %s at %i\n", op, file, line);
-	return op->ob_refcnt;
+inline Py_ssize_t _Py_AtomicAdd(PyObject* op){
+	//atomic_add(op, 1);
+	//return op->ob_refcnt;
+	return 1;
 }
 
-Py_ssize_t _Py_AtomicSub(PyObject* op){
-	atomic_sub(op, 1);
-	//if(op->ob_refcnt != 0)
-	//	_Py_CHECK_REFCNT(op)
-	//else
-	//	_Py_Dealloc(op);
+inline Py_ssize_t _Py_AtomicSub(PyObject* op){
+	//atomic_sub(op, 1);
+	return;
 }
 
 #ifdef COUNT_ALLOCS
@@ -286,37 +280,22 @@ PyObject_InitVar(PyVarObject *op, PyTypeObject *tp, Py_ssize_t size)
 
 PyObject *
 _PyObject_New(PyTypeObject *tp)
-{	
+{
 	PyObject *obj;
 	const size_t size = _PyObject_SIZE(tp);
-	/* note that we need to add one, for the sentinel */
 
 	obj = _PyObject_GC_Malloc(size);
 
 	if (obj == NULL)
 		return (PyVarObject *)PyErr_NoMemory();
 
-	//memset(obj, '\0', size);
-
-	if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
-		Py_INCREF(tp);
-
 	PyObject_INIT(obj, tp);
-
-	PyObject_GC_Track(obj);
 	return obj;
 }
 
 PyVarObject *
 _PyObject_NewVar(PyTypeObject *tp, Py_ssize_t nitems)
 {
-	/*PyVarObject *op;
-	const size_t size = _PyObject_VAR_SIZE(tp, nitems);
-	op = (PyVarObject *) PyObject_MALLOC(size);
-	if (op == NULL)
-		return (PyVarObject *)PyErr_NoMemory();
-	return PyObject_INIT_VAR(op, tp, nitems);
-	*/
 	/*
 	 * Always use garbage collector
 	 */
@@ -329,17 +308,7 @@ _PyObject_NewVar(PyTypeObject *tp, Py_ssize_t nitems)
 	if (obj == NULL)
 		return (PyVarObject *)PyErr_NoMemory();
 
-	memset(obj, '\0', size);
-
-	if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
-		Py_INCREF(tp);
-
-	if (tp->tp_itemsize == 0)
-		PyObject_INIT(obj, tp);
-	else
-		(void) PyObject_INIT_VAR((PyVarObject *)obj, tp, nitems);
-
-	PyObject_GC_Track(obj);
+	PyObject_INIT_VAR((PyVarObject *)obj, tp, nitems);
 	return obj;
 }
 
@@ -1436,7 +1405,6 @@ PyObject_GenericGetAttr(PyObject *obj, PyObject *name)
 			goto done;
 	}
 
-	
 #if 0 /* XXX this is not quite _PyType_Lookup anymore */
 	/* Inline _PyType_Lookup */
 	{
@@ -2117,7 +2085,8 @@ _Py_ReadyTypes(void)
 {
 	if (PyType_Ready(&PyType_Type) < 0)
 		Py_FatalError("Can't initialize type type");
-
+	accgc_to_root(&PyType_Type);
+	
 	if (PyType_Ready(&_PyWeakref_RefType) < 0)
 		Py_FatalError("Can't initialize weakref type");
 
@@ -2129,7 +2098,9 @@ _Py_ReadyTypes(void)
 
 	if (PyType_Ready(&PyBool_Type) < 0)
 		Py_FatalError("Can't initialize bool type");
-
+	accgc_to_root(&_Py_TrueStruct);
+	accgc_to_root(&_Py_ZeroStruct);
+	
 	if (PyType_Ready(&PyString_Type) < 0)
 		Py_FatalError("Can't initialize str type");
 
@@ -2141,7 +2112,9 @@ _Py_ReadyTypes(void)
 
 	if (PyType_Ready(&PyNone_Type) < 0)
 		Py_FatalError("Can't initialize None type");
-
+	accgc_to_root(&PyNone_Type);
+	accgc_to_root(Py_None);
+	
 	if (PyType_Ready(&PyNotImplemented_Type) < 0)
 		Py_FatalError("Can't initialize NotImplemented type");
 
@@ -2259,26 +2232,7 @@ _Py_NewReference(PyObject *op)
 void
 _Py_ForgetReference(register PyObject *op)
 {
-#ifdef SLOW_UNREF_CHECK
-        register PyObject *p;
-#endif
-	if (op->ob_refcnt < 0)
-		Py_FatalError("UNREF negative refcnt");
-	if (op == &refchain ||
-	    op->_ob_prev->_ob_next != op || op->_ob_next->_ob_prev != op)
-		Py_FatalError("UNREF invalid object");
-#ifdef SLOW_UNREF_CHECK
-	for (p = refchain._ob_next; p != &refchain; p = p->_ob_next) {
-		if (p == op)
-			break;
-	}
-	if (p == &refchain) /* Not found */
-		Py_FatalError("UNREF unknown object");
-#endif
-	op->_ob_next->_ob_prev = op->_ob_prev;
-	op->_ob_prev->_ob_next = op->_ob_next;
-	op->_ob_next = op->_ob_prev = NULL;
-	_Py_INC_TPFREES(op);
+
 }
 
 void

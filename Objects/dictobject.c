@@ -646,11 +646,11 @@ PyDict_GetItem(PyObject *op, PyObject *key)
 	   interning.  Let's just hope that no exception occurs then... */
 	tstate = PyThreadState_Get();
 	if (tstate != NULL && tstate->curexc_type != NULL) {
-		/* preserve the existing exception */
+	
 		PyObject *err_type, *err_value, *err_tb;
 		PyErr_Fetch(&err_type, &err_value, &err_tb);
 		ep = (mp->ma_lookup)(mp, key, hash);
-		/* ignore errors */
+		
 		PyErr_Restore(err_type, err_value, err_tb);
 		if (ep == NULL)
 			return NULL;
