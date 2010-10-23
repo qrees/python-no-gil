@@ -25,7 +25,7 @@
 #include <ext/hash_map>
 //#include <stack>
 
-//#include <set>
+#include <sys/time.h>
 #include <hash_set>
 using namespace __gnu_cxx;
 using namespace std;
@@ -1408,8 +1408,8 @@ int accgc_move_to_list(PyObject *obj, void * list){
 		return 0;
 	
 	if(head->gc.gc_next){
-		const char* tp_name = obj->ob_type->tp_name;
 #ifdef ACCGC_COUNTERS
+		const char* tp_name = obj->ob_type->tp_name;
 		if(head->gc.color == p_accgc_delete){
 			failed++;
 			eprintf("Failed object %p of type %s", obj, tp_name);
@@ -1429,7 +1429,6 @@ int accgc_move_to_list(PyObject *obj, void * list){
 				tr_res = traverse(obj,
 						(visitproc)accgc_move_to_list,
 						p_accgc_black);
-			}else{
 			}
 #ifdef ACCGC_COUNTERS
 			move_to_black++;
@@ -1441,7 +1440,7 @@ int accgc_move_to_list(PyObject *obj, void * list){
 		}
 		
 	}else{
-		printf("Object %p of type %s not under GC control!\n", head, obj->ob_type->tp_name);
+		//printf("Object %p of type %s not under GC control!\n", head, obj->ob_type->tp_name);
 	}
 	return 0;
 }
@@ -1591,7 +1590,9 @@ void accgc_collect(){
 	PyThreadState* root, *p;
 	PyInterpreterState *interp;
 	PyFrameObject* frame;
+    struct timeval tv1, tv2;
 	
+    gettimeofday(&tv1, NULL);
 	root = PyThreadState_Get();
 	if (accgc_enable == 0){
 		return;
@@ -1703,6 +1704,10 @@ void accgc_collect(){
 #endif
 	
 	eprintf("GC - end");
+    gettimeofday(&tv2, NULL);
+    printf("GC time: %d us\n", tv2.tv_usec - tv1.tv_usec +
+           1000000 * (tv2.tv_sec - tv1.tv_sec));
+
 }
 
 PyObject *

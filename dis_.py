@@ -1,4 +1,4 @@
 import dis
-import prog
+import progthread
 
-dis(prog)
+dis.dis(progthread.myfunc)
