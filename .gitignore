@@ -17,9 +17,6 @@ config.status
 config.status.lineno
 pyconfig.h
 python
-Doc/tools/docutils/
-Doc/tools/jinja2/
-Doc/tools/sphinx/
-Doc/tools/pygments/
+Doc
 *.swp
 *~

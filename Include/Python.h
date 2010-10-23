@@ -179,9 +179,9 @@ PyAPI_FUNC(PyObject*) _Py_Mangle(PyObject *p, PyObject *name);
 #endif
 
 
-extern PyGC_Head accgc_white;
-extern PyGC_Head accgc_gray;
-extern PyGC_Head accgc_black;
+//extern PyGC_Head accgc_white;
+//extern PyGC_Head accgc_gray;
+//extern PyGC_Head accgc_black;
 extern int accgc_enable;
 extern int alloc_count;
 extern int accgc_run;

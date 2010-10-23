@@ -338,7 +338,7 @@ int accgc_init(void);
 //void accgc_mutate(PyObject* obj);
 void accgc_to_root(PyObject* obj);
 void accgc_from_root(PyObject* obj);
-void accgc_collect(void);
+int accgc_collect(void);
 int accgc_method_cache_traverse(visitproc , void* );
 
 #define SPINLOCK_INIT(arg) pthread_spinlock_t arg = 1
