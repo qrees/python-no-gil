@@ -108,7 +108,7 @@ PyInt_FromLong(long ival)
 	free_list = (PyIntObject *)Py_TYPE(v);
 	PyObject_INIT(v, &PyInt_Type);
 	v->ob_ival = ival;
-	accgc_to_root(v);
+	//accgc_to_root(v);
 	return (PyObject *) v;
 }
 
@@ -132,6 +132,7 @@ static void
 int_dealloc(PyIntObject *v)
 {
 	if (PyInt_CheckExact(v)) {
+		//accgc_from_root(v);
 		Py_TYPE(v) = (struct _typeobject *)free_list;
 		free_list = v;
 	}
@@ -142,6 +143,7 @@ int_dealloc(PyIntObject *v)
 static void
 int_free(PyIntObject *v)
 {
+	//accgc_from_root(v);
 	Py_TYPE(v) = (struct _typeobject *)free_list;
 	free_list = v;
 }

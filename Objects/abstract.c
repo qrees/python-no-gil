@@ -890,7 +890,7 @@ PyNumber_Check(PyObject *o)
     a valid result is produced or an error occurs.
 
  */
-
+int _i = 0;
 static PyObject *
 binary_op1(PyObject *v, PyObject *w, const int op_slot)
 {
@@ -926,6 +926,7 @@ binary_op1(PyObject *v, PyObject *w, const int op_slot)
 		Py_DECREF(x); /* can't do it */
 	}
 	if (!NEW_STYLE_NUMBER(v) || !NEW_STYLE_NUMBER(w)) {
+		_i++;
 		int err = PyNumber_CoerceEx(&v, &w);
 		if (err < 0) {
 			return NULL;

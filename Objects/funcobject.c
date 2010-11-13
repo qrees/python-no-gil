@@ -118,6 +118,7 @@ PyFunction_SetDefaults(PyObject *op, PyObject *defaults)
 	}
 	Py_XDECREF(((PyFunctionObject *) op) -> func_defaults);
 	((PyFunctionObject *) op) -> func_defaults = defaults;
+	accgc_mutate(op);
 	return 0;
 }
 
@@ -151,6 +152,7 @@ PyFunction_SetClosure(PyObject *op, PyObject *closure)
 	}
 	Py_XDECREF(((PyFunctionObject *) op) -> func_closure);
 	((PyFunctionObject *) op) -> func_closure = closure;
+	accgc_mutate(op);
 	return 0;
 }
 
@@ -192,6 +194,7 @@ func_get_dict(PyFunctionObject *op)
 		op->func_dict = PyDict_New();
 		if (op->func_dict == NULL)
 			return NULL;
+		accgc_mutate(op);
 	}
 	Py_INCREF(op->func_dict);
 	return op->func_dict;
@@ -218,6 +221,7 @@ func_set_dict(PyFunctionObject *op, PyObject *value)
 	}
 	tmp = op->func_dict;
 	Py_INCREF(value);
+	accgc_mutate(op);
 	op->func_dict = value;
 	Py_XDECREF(tmp);
 	return 0;
@@ -262,6 +266,7 @@ func_set_code(PyFunctionObject *op, PyObject *value)
 	Py_INCREF(value);
 	op->func_code = value;
 	Py_DECREF(tmp);
+	accgc_mutate(op);
 	return 0;
 }
 
@@ -290,6 +295,7 @@ func_set_name(PyFunctionObject *op, PyObject *value)
 	Py_INCREF(value);
 	op->func_name = value;
 	Py_DECREF(tmp);
+	accgc_mutate(op);
 	return 0;
 }
 
@@ -326,6 +332,7 @@ func_set_defaults(PyFunctionObject *op, PyObject *value)
 	Py_XINCREF(value);
 	op->func_defaults = value;
 	Py_XDECREF(tmp);
+	accgc_mutate(op);
 	return 0;
 }
 
@@ -666,6 +673,7 @@ cm_init(PyObject *self, PyObject *args, PyObject *kwds)
 	
 	Py_INCREF(callable);
 	cm->cm_callable = callable;
+	accgc_mutate(self);
 	return 0;
 }
 

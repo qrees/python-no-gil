@@ -3,24 +3,29 @@ define my_bt
     cont
 end
 handle SIGUSR1 noprint nopass
-break _Py_AtomicAdd
-commands
-    silent
-    my_bt
-end
-condition 1
-break Objects/obmalloc.c:923
-commands
-    silent
-    printf "# -> Allocated %p\n",bp
-    my_bt
-end
-condition 2
-#break Modules/gcmodule.cpp:1734
+#break _Py_AtomicAdd
+#commands
+#    silent
+#    my_bt
+#end
+#condition 1
+#break Objects/obmalloc.c:923
+#commands
+#    silent
+#    printf "# -> Allocated %p\n",bp
+#    my_bt
+#end
+#condition 2
+#break Modules/gcmodule.cpp:1134
 #commands
 #    silent
 #    printf "# -> Allocated %p\n",op
 #    my_bt
 #end
 #condition 2
-run prog.py > prog.log
+break Objects/abstract.c:933
+run setup.py > prog.log
+break Objects/stringobject.c:90
+c
+print &(op->ob_type)
+disable 2

@@ -330,15 +330,16 @@ PyAPI_FUNC(void) PyObject_GC_Del(void *);
 extern FILE *log_file;
 extern int alloc_count;
 
-#define eprintf(format, ...) {fprintf (log_file, "%i:"format"\n", pthread_self(), ## __VA_ARGS__);}
-//#define eprintf(format, ...) {}
+//#define eprintf(format, ...) {fprintf (log_file, "%i:"format"\n", pthread_self(), ## __VA_ARGS__);fflush(log_file);}
+//#define eprintf(format, ...) {fprintf (log_file, format"\n", ## __VA_ARGS__);fflush(log_file);}
+#define eprintf(format, ...) {}
 
 int accgc_init(void);
 #define accgc_mutate(arg)
 //void accgc_mutate(PyObject* obj);
 void accgc_to_root(PyObject* obj);
 void accgc_from_root(PyObject* obj);
-int accgc_collect(void);
+void accgc_collect(void);
 int accgc_method_cache_traverse(visitproc , void* );
 
 #define SPINLOCK_INIT(arg) pthread_spinlock_t arg = 1
@@ -346,12 +347,13 @@ int accgc_method_cache_traverse(visitproc , void* );
 #define ACCGC_LOCK(arg) pthread_spin_lock(&(arg))
 #define ACCGC_UNLOCK(arg) pthread_spin_unlock(&(arg))
 
+//#define PERF
 /*
  * If defined, GC will collect statistics about what types are used.
  * 
  * #define ACCGC_COUNT_TYPES
  */
-#define ACCGC_COUNTERS
+//#define ACCGC_COUNTERS
 #ifdef __cplusplus
 }
 #endif

@@ -79,7 +79,7 @@ gen_send_ex(PyGenObject *gen, PyObject *arg, int exc)
 	Py_XINCREF(tstate->frame);
 	assert(f->f_back == NULL);
 	f->f_back = tstate->frame;
-
+	accgc_mutate(f);
 	gen->gi_running = 1;
 	result = PyEval_EvalFrameEx(f, exc);
 	gen->gi_running = 0;

@@ -1350,7 +1350,7 @@ _PyObject_DebugMalloc(size_t nbytes)
 	uchar *p;	/* base address of malloc'ed block */
 	uchar *tail;	/* p + 2*SST + nbytes == pointer to tail pad bytes */
 	size_t total;	/* nbytes + 4*SST */
-
+	
 	bumpserialno();
 	total = nbytes + 4*SST;
 	if (total < nbytes)
@@ -1387,6 +1387,7 @@ _PyObject_DebugFree(void *p)
 
 	if (p == NULL)
 		return;
+	
 	_PyObject_DebugCheckAddress(p);
 	nbytes = read_size_t(q);
 	if (nbytes > 0)

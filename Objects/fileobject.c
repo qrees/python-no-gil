@@ -477,6 +477,7 @@ PyFile_SetEncodingAndErrors(PyObject *f, const char *enc, char* errors)
 	file->f_encoding = str;
 	Py_DECREF(file->f_errors);
 	file->f_errors = oerrors;
+	accgc_mutate(file);
 	return 1;
 }
 

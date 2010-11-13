@@ -213,6 +213,7 @@ PyList_SetItem(register PyObject *op, register Py_ssize_t i,
 	olditem = *p;
 	*p = newitem;
 	Py_XDECREF(olditem);
+	accgc_mutate(op);
 	return 0;
 }
 
@@ -246,6 +247,7 @@ ins1(PyListObject *self, Py_ssize_t where, PyObject *v)
 		items[i+1] = items[i];
 	Py_INCREF(v);
 	items[where] = v;
+	accgc_mutate(self);
 	return 0;
 }
 
@@ -276,6 +278,7 @@ app1(PyListObject *self, PyObject *v)
 
 	Py_INCREF(v);
 	PyList_SET_ITEM(self, n, v);
+	accgc_mutate(self);
 	return 0;
 }
 
@@ -478,6 +481,7 @@ list_slice(PyListObject *a, Py_ssize_t ilow, Py_ssize_t ihigh)
 		Py_INCREF(v);
 		dest[i] = v;
 	}
+	//accgc_mutate(np);
 	return (PyObject *)np;
 }
 
@@ -526,6 +530,7 @@ list_concat(PyListObject *a, PyObject *bb)
 		Py_INCREF(v);
 		dest[i] = v;
 	}
+	//accgc_mutate(np);
 	return (PyObject *)np;
 #undef b
 }
@@ -567,6 +572,7 @@ list_repeat(PyListObject *a, Py_ssize_t n)
 			p++;
 		}
 	}
+	//accgc_mutate(np);
 	return (PyObject *) np;
 }
 
@@ -693,6 +699,7 @@ list_ass_slice(PyListObject *a, Py_ssize_t ilow, Py_ssize_t ihigh, PyObject *v)
 	if (recycle != recycle_on_stack)
 		PyMem_FREE(recycle);
 	Py_XDECREF(v_as_SF);
+	accgc_mutate(a);
 	return result;
 #undef b
 }
@@ -742,6 +749,7 @@ list_inplace_repeat(PyListObject *self, Py_ssize_t n)
 			items[p++] = o;
 		}
 	}
+	accgc_mutate(self);
 	Py_INCREF(self);
 	return (PyObject *)self;
 }
@@ -758,6 +766,7 @@ list_ass_item(PyListObject *a, Py_ssize_t i, PyObject *v)
 	if (v == NULL)
 		return list_ass_slice(a, i, i+1, v);
 	Py_INCREF(v);
+	accgc_mutate(a);
 	old_value = a->ob_item[i];
 	a->ob_item[i] = v;
 	Py_DECREF(old_value);
@@ -827,6 +836,7 @@ listextend(PyListObject *self, PyObject *b)
 			Py_INCREF(o);
 			dest[i] = o;
 		}
+		accgc_mutate(self);
 		Py_DECREF(b);
 		Py_RETURN_NONE;
 	}
@@ -885,6 +895,7 @@ listextend(PyListObject *self, PyObject *b)
 	if (Py_SIZE(self) < self->allocated)
 		list_resize(self, Py_SIZE(self));  /* shrinking can't fail */
 
+	accgc_mutate(self);
 	Py_DECREF(it);
 	Py_RETURN_NONE;
 
@@ -2195,6 +2206,7 @@ dsu_fail:
 	}
 	Py_XDECREF(compare);
 	Py_XINCREF(result);
+	accgc_mutate(self);
 	return result;
 }
 #undef IFLT
@@ -2571,6 +2583,7 @@ list_subscript(PyListObject* self, PyObject* item)
 static int
 list_ass_subscript(PyListObject* self, PyObject* item, PyObject* value)
 {
+	accgc_mutate(self);
 	if (PyIndex_Check(item)) {
 		Py_ssize_t i = PyNumber_AsSsize_t(item, PyExc_IndexError);
 		if (i == -1 && PyErr_Occurred())

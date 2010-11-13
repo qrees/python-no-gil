@@ -309,6 +309,7 @@ frame_setlineno(PyFrameObject *f, PyObject* p_new_lineno)
 	/* Finally set the new f_lineno and f_lasti and return OK. */
 	f->f_lineno = new_lineno;
 	f->f_lasti = new_lasti;
+	accgc_mutate(f);
 	return 0;
 }
 
@@ -339,7 +340,7 @@ frame_settrace(PyFrameObject *f, PyObject* v, void *closure)
 		f->f_lineno = PyCode_Addr2Line(f->f_code, f->f_lasti);
 
 	Py_XDECREF(old_value);
-
+	accgc_mutate(f);
 	return 0;
 }
 

@@ -459,6 +459,7 @@ insertdict(register PyDictObject *mp, PyObject *key, long hash, PyObject *value)
 		ep->me_value = value;
 		Py_DECREF(old_value); /* which **CAN** re-enter */
 		Py_DECREF(key);
+		accgc_mutate(mp);
 	}
 	else {
 		if (ep->me_key == NULL)
@@ -471,6 +472,7 @@ insertdict(register PyDictObject *mp, PyObject *key, long hash, PyObject *value)
 		ep->me_hash = (Py_ssize_t)hash;
 		ep->me_value = value;
 		mp->ma_used++;
+		accgc_mutate(mp);
 	}
 	return 0;
 }
@@ -505,6 +507,7 @@ insertdict_clean(register PyDictObject *mp, PyObject *key, long hash,
 	ep->me_hash = (Py_ssize_t)hash;
 	ep->me_value = value;
 	mp->ma_used++;
+	accgc_mutate(mp);
 }
 
 /*

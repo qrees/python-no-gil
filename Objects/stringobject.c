@@ -84,7 +84,7 @@ PyString_FromStringAndSize(const char *str, Py_ssize_t size)
 	op = (PyStringObject *)_PyObject_GC_Malloc(sizeof(PyStringObject) + size);
 	if (op == NULL)
 		return PyErr_NoMemory();
-
+	
 	PyObject_INIT_VAR(op, &PyString_Type, size);
 	op->ob_shash = -1;
 	op->ob_sstate = SSTATE_NOT_INTERNED;
