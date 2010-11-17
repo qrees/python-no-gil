@@ -859,9 +859,8 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 		}
 
 	fast_next_opcode:
-		if(alloc_count > 10000){
+		if(alloc_count > ACCGC_THRESHOLD){
 			accgc_collect();
-			alloc_count = 0;
 		}
 		f->f_currentstack = stack_pointer;
 	
@@ -4491,26 +4490,7 @@ string_concatenate(PyObject *v, PyObject *w,
 		}
 		}
 	}
-
-	if (v->ob_refcnt == 1 && !PyString_CHECK_INTERNED(v)) {
-		/* Now we own the last reference to 'v', so we can resize it
-		 * in-place.
-		 */
-		if (_PyString_Resize(&v, new_len) != 0) {
-			/* XXX if _PyString_Resize() fails, 'v' has been
-			 * deallocated so it cannot be put back into
-			 * 'variable'.  The MemoryError is raised when there
-			 * is no value in 'variable', which might (very
-			 * remotely) be a cause of incompatibilities.
-			 */
-			return NULL;
-		}
-		/* copy 'w' into the newly allocated area of 'v' */
-		memcpy(PyString_AS_STRING(v) + v_len,
-		       PyString_AS_STRING(w), w_len);
-		return v;
-	}
-	else {
+	{
 		/* When in-place resizing is not an option. */
 		PyString_Concat(&v, w);
 		return v;

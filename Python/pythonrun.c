@@ -431,7 +431,7 @@ Py_Finalize(void)
 #if 0
 	PyGC_Collect();
 #endif
-
+	accgc_finish();
 	/* Destroy the database used by _PyImport_{Fixup,Find}Extension */
 	_PyImport_Fini();
 

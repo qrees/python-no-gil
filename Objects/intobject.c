@@ -108,7 +108,7 @@ PyInt_FromLong(long ival)
 	free_list = (PyIntObject *)Py_TYPE(v);
 	PyObject_INIT(v, &PyInt_Type);
 	v->ob_ival = ival;
-	accgc_to_root(v);
+	//accgc_to_root(v);
 	return (PyObject *) v;
 }
 

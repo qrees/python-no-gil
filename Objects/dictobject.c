@@ -266,6 +266,7 @@ PyDict_New(void)
 #ifdef SHOW_CONVERSION_COUNTS
 	++created;
 #endif
+	pthread_spin_init(&mp->ma_lock, PTHREAD_PROCESS_PRIVATE);
 	PyObject_GC_Track(mp);
 	return (PyObject *)mp;
 }

@@ -247,9 +247,9 @@ typedef union _gc_head {
 	struct {
 		union _gc_head *gc_next;
 		union _gc_head *gc_prev;
-		Py_ssize_t gc_refs;
+		//Py_ssize_t gc_refs;
 		void* color;
-		int root;
+		//int root;
 	} gc;
 	long double dummy;
 } PyGC_Head;
@@ -331,9 +331,17 @@ extern FILE *log_file;
 extern int alloc_count;
 
 //#define eprintf(format, ...) {fprintf (log_file, "%i:"format"\n", pthread_self(), ## __VA_ARGS__);}
+#if 0
+#define _eprintf(format, ...) {fprintf (log_file, format, ## __VA_ARGS__);}
+#define eprintf(format, ...) {_eprintf (""format"\n", ## __VA_ARGS__);}
+#else
+#define _eprintf(format, ...) {}
 #define eprintf(format, ...) {}
+#endif
 
+#define ACCGC_THRESHOLD 100000
 int accgc_init(void);
+void accgc_finish(void);
 #define accgc_mutate(arg)
 //void accgc_mutate(PyObject* obj);
 void accgc_to_root(PyObject* obj);
@@ -341,10 +349,11 @@ void accgc_from_root(PyObject* obj);
 void accgc_collect(void);
 int accgc_method_cache_traverse(visitproc , void* );
 
-#define SPINLOCK_INIT(arg) pthread_spinlock_t arg = 1
-#define SPINLOCK(arg) pthread_spinlock_t arg
-#define ACCGC_LOCK(arg) pthread_spin_lock(&(arg))
-#define ACCGC_UNLOCK(arg) pthread_spin_unlock(&(arg))
+// #define SPINLOCK_INIT(arg) pthread_spinlock_t arg = 1
+#define ACCGC_INITLOCK(arg) pthread_mutex_init(&(arg), NULL)
+#define SPINLOCK(arg) pthread_mutex_t arg
+#define ACCGC_LOCK(arg) pthread_mutex_lock(&(arg))
+#define ACCGC_UNLOCK(arg) pthread_mutex_unlock(&(arg))
 
 /*
  * If defined, GC will collect statistics about what types are used.
@@ -352,6 +361,9 @@ int accgc_method_cache_traverse(visitproc , void* );
  * #define ACCGC_COUNT_TYPES
  */
 //#define ACCGC_COUNTERS
+
+#define PERF
+
 #ifdef __cplusplus
 }
 #endif

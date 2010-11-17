@@ -2687,6 +2687,8 @@ type_traverse(PyTypeObject *type, visitproc visit, void *arg)
 	Py_VISIT(type->tp_mro);
 	Py_VISIT(type->tp_bases);
 	Py_VISIT(type->tp_base);
+	Py_VISIT(type->tp_subclasses);
+	Py_VISIT(type->tp_weaklist);
 
 	/* There's no need to visit type->tp_subclasses or
 	   ((PyHeapTypeObject *)type)->ht_slots, because they can't be involved
