@@ -742,21 +742,33 @@ PyAPI_FUNC(void) _Py_AddToAllObjects(PyObject *, int force);
 	(*Py_TYPE(op)->tp_dealloc)((PyObject *)(op)))
 #endif /* !Py_TRACE_REFS */
 
-Py_ssize_t _Py_AtomicAdd(PyObject* op);
+inline Py_ssize_t _Py_AtomicAdd(PyObject* op, int i);
 
-Py_ssize_t _Py_AtomicSub(PyObject* op);
+inline Py_ssize_t _Py_AtomicSub(PyObject* op, int i);
 
+#if 1
 #define Py_INCREF(op) (				\
 	_Py_INC_REFTOTAL  _Py_REF_DEBUG_COMMA	\
-	(_Py_AtomicAdd((PyObject *)op)))
+	(_Py_AtomicAdd((PyObject *)op, 1)))
 
 #define Py_DECREF(op)					\
 	if (_Py_DEC_REFTOTAL _Py_REF_DEBUG_COMMA	\
-		_Py_AtomicSub((PyObject *)op) != 0)		\
+		_Py_AtomicSub((PyObject *)op, 1) != 0)		\
 		_Py_CHECK_REFCNT(op)			\
 	else						\
 		_Py_Dealloc((PyObject *)(op))
+#else
+#define Py_INCREF(op) (             \
+    _Py_INC_REFTOTAL  _Py_REF_DEBUG_COMMA   \
+    ((PyObject*)(op))->ob_refcnt++)
 
+#define Py_DECREF(op)                   \
+    if (_Py_DEC_REFTOTAL  _Py_REF_DEBUG_COMMA   \
+        --((PyObject*)(op))->ob_refcnt != 0)        \
+        _Py_CHECK_REFCNT(op)            \
+    else                        \
+        _Py_Dealloc((PyObject *)(op))
+#endif
 /* Safely decref `op` and set `op` to NULL, especially useful in tp_clear
  * and tp_dealloc implementatons.
  *

@@ -105,13 +105,21 @@ static inline void atomic_sub( volatile PyObject* op, int i) {
 }
 
 
-Py_ssize_t _Py_AtomicAdd(PyObject* op){
-	atomic_add(op, 1);
+inline Py_ssize_t _Py_AtomicAdd(PyObject* op, int i){
+	asm volatile(
+			LOCK_PREFIX "addl %1,%0"
+                :"=m" (op->ob_refcnt)
+                :"ir" (i), "m" (op->ob_refcnt));
+	//atomic_add(op, 1);
 	return op->ob_refcnt;
 }
 
-Py_ssize_t _Py_AtomicSub(PyObject* op){
-	atomic_sub(op, 1);
+inline Py_ssize_t _Py_AtomicSub(PyObject* op, int i){
+	//atomic_sub(op, 1);
+   asm volatile(
+		   LOCK_PREFIX "subl %1,%0"
+				 :"=m" (op->ob_refcnt)
+				 :"ir" (i), "m" (op->ob_refcnt));
 	return op->ob_refcnt;
 }
 
