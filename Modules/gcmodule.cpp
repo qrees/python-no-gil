@@ -783,14 +783,16 @@ void traverse_obj(PyObject* obj, visitproc proc){
  * Moves objct to root objects list. These objects are start points for GC.
  */
 void accgc_to_root(PyObject* obj){
-	accgc_roots.insert(obj);
+	if(obj)
+		accgc_roots.insert(obj);
 }
 
 /*
  * Remove object from root objects list. In most cases, this object is no longer used.
  */
 void accgc_from_root(PyObject* obj){
-	accgc_roots.erase(obj);
+	if(obj)
+		accgc_roots.erase(obj);
 }
 
 #define exp_point(exp) (PyExc_ ## exp)

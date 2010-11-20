@@ -55,7 +55,7 @@ INSTALL_SHARED= ${INSTALL} -m 555
 MAKESETUP=      $(srcdir)/Modules/makesetup
 
 # Compiler options
-OPT=		-g -Wall -Wstrict-prototypes
+OPT=		-DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes
 BASECFLAGS=	 -fno-strict-aliasing
 BASECXXFLAGS=    -fno-strict-aliasing -fwrapv -Wall
 CFLAGS=		$(BASECFLAGS) $(OPT) $(EXTRA_CFLAGS)
@@ -138,7 +138,7 @@ EXEMODE=	755
 FILEMODE=	644
 
 # configure script arguments
-CONFIG_ARGS=	 '--with-pydebug' '--with-threads'
+CONFIG_ARGS=	 '--with-threads'
 
 
 # Subdirectories with code
