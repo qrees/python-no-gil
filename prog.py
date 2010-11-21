@@ -4,10 +4,7 @@
 #gc.set_debug(gc.DEBUG_STATS | gc.DEBUG_COLLECTABLE| gc.DEBUG_UNCOLLECTABLE)
 
 i = 0
-def fun():
-    a = 1
-
-while i < 1000000:
-    fun()
+while i < 10000000:
     i += 1
-
+    a = []
+    del a

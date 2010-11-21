@@ -78,12 +78,11 @@ whose size is determined when the object is allocated.
 #define PyObject_HEAD			\
 	_PyObject_HEAD_EXTRA		\
 	Py_ssize_t ob_refcnt;		\
-	struct _typeobject *ob_type; \
-	void * it;
+	struct _typeobject *ob_type;
 
 #define PyObject_HEAD_INIT(type)	\
 	_PyObject_EXTRA_INIT		\
-	1, type, NULL, 
+	1, type,
 
 #define PyVarObject_HEAD_INIT(type, size)	\
 	PyObject_HEAD_INIT(type) size,

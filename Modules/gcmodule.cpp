@@ -75,7 +75,7 @@ PyGC_Head gc_lists[3];
 //PyGC_Head accgc_root;
 //PyGC_Head accgc_delete;
 obj_set accgc_roots;
-obj_list accgc_white;
+obj_set accgc_white;
 #define ACCGC_WHITE 1
 obj_set accgc_gray;
 #define ACCGC_GRAY 2
@@ -836,11 +836,10 @@ int accgc_move_objs(PyObject *obj, void * list){
 	if(in(accgc_gray, obj))
 		return 0;
 	
-	if(obj->it != (void*)0xcbcbcbcb && obj->it != NULL){
+	if(in(accgc_white, obj)){
+	//if(obj->it != (void*)0xcbcbcbcb && obj->it != NULL){
 		eprintf("checking %p", obj);
-		it = (obj_list::iterator*)(obj->it);
-		accgc_white.erase(*it);
-		obj->it = NULL;
+		accgc_white.erase(obj);
 		traverse = obj->ob_type->tp_traverse;
 		if(traverse){
 			accgc_gray.insert(obj);
@@ -1011,7 +1010,6 @@ void accgc_collect_types(){
 }
 
 void accgc_collect(){
-	return;
 	//printf("white size %i\n", accgc_white.size());
 	//accgc_white.clear();
 	//return;
@@ -1087,14 +1085,14 @@ void accgc_collect(){
 	accgc_collect_loop();
 	perf_inter("the rest");
 	
-	obj_list::iterator itl;
-	obj_list::iterator end = accgc_white.end();
+	obj_set::iterator itl;
+	obj_set::iterator end = accgc_white.end();
 	for(itl = accgc_white.begin(); itl != end; itl++){
 		//obj = *(itl);
 		//obj->it = NULL;
 		PyObject_GC_Del(*(itl));
 	}
-	accgc_white = obj_list();
+	accgc_white = obj_set();
 	perf_stop("delete");
 #ifdef ACCGC_COUNTERS
 	eprintf("Objects: %i %i failed: %i", w_l, move_to_black, failed);
@@ -1127,7 +1125,8 @@ _PyObject_GC_Malloc(size_t basicsize)
 		UNLOCK(colored_lock);
 		return PyErr_NoMemory();
 	}
-	op->it = new obj_list::iterator(accgc_white.insert(accgc_white.begin(), op));
+	//op->it = new obj_list::iterator(accgc_white.insert(accgc_white.begin(), op));
+	accgc_white.insert((PyObject*)op);
 	UNLOCK(colored_lock);
 	eprintf("Allocated %p\n", op);
 	return op;
@@ -1161,8 +1160,7 @@ _PyObject_GC_Resize(PyVarObject *op, Py_ssize_t nitems)
 		return (PyVarObject *)PyErr_NoMemory();
 
 	accgc_roots.erase((PyObject*)op);
-	if(op->it)
-		accgc_white.erase(*((obj_list::iterator*)(op->it)));
+	accgc_white.erase((PyObject*)op);
 	accgc_gray.erase((PyObject*)op);
 
 	eprintf("Resized %p", op);
@@ -1172,7 +1170,7 @@ _PyObject_GC_Resize(PyVarObject *op, Py_ssize_t nitems)
 	if (obj == NULL)
 		return (PyVarObject *)PyErr_NoMemory();
 	
-	obj->it = new obj_list::iterator(accgc_white.insert(accgc_white.begin(),(PyObject*)obj));
+	accgc_white.insert((PyObject*)obj);
 	Py_SIZE(obj) = nitems;
 	return obj;
 }
