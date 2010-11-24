@@ -988,14 +988,14 @@ void accgc_collect(){
 	while (curr != p_accgc_white){
 		PyObject *obj = FROM_GC(curr);
 		
-		w_l++;
-		curr->gc.color = p_accgc_delete;
+		//w_l++;
+		//curr->gc.color = p_accgc_delete;
 		curr = curr->gc.gc_next;
 
 		if(in(accgc_roots, obj))
 			continue;
 		
-		PyObject_GC_Del(obj);	// UNDOMMENT : this is THE garbage collection
+		PyObject_GC_Del(obj);
 		dealloc_count++;
 	}
 	perf_stop("collect");
@@ -1053,9 +1053,9 @@ _PyObject_GC_Malloc(size_t basicsize){
 	if (basicsize > PY_SSIZE_T_MAX - sizeof(PyGC_Head))
 		return PyErr_NoMemory();
 
+	ACCGC_LOCK(colored_lock);
 	alloc_count ++;
 	alloc_count_all ++;
-	ACCGC_LOCK(colored_lock);
 	
 	g = (PyGC_Head *)PyObject_MALLOC(sizeof(PyGC_Head) + basicsize);
 

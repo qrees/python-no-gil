@@ -352,8 +352,15 @@ int accgc_method_cache_traverse(visitproc , void* );
 // #define SPINLOCK_INIT(arg) pthread_spinlock_t arg = 1
 #define ACCGC_INITLOCK(arg) pthread_mutex_init(&(arg), NULL)
 #define SPINLOCK(arg) pthread_mutex_t arg
-#define ACCGC_LOCK(arg) pthread_mutex_lock(&(arg))
-#define ACCGC_UNLOCK(arg) pthread_mutex_unlock(&(arg))
+
+#define ACCGC_LOCK(arg) {\
+		eprintf("Lock %p %i\n", &(arg), __LINE__);\
+		pthread_mutex_lock(&(arg));\
+	}
+#define ACCGC_UNLOCK(arg) {\
+		eprintf("unLock %p, %i\n", &(arg), __LINE__);\
+		pthread_mutex_unlock(&(arg));\
+	}
 
 /*
  * If defined, GC will collect statistics about what types are used.

@@ -266,7 +266,8 @@ PyDict_New(void)
 #ifdef SHOW_CONVERSION_COUNTS
 	++created;
 #endif
-	pthread_spin_init(&mp->ma_lock, PTHREAD_PROCESS_PRIVATE);
+	pthread_mutex_init(&mp->ma_lock, NULL);
+	//pthread_spin_init(&mp->ma_lock, PTHREAD_PROCESS_PRIVATE);
 	PyObject_GC_Track(mp);
 	return (PyObject *)mp;
 }
@@ -393,6 +394,7 @@ lookdict_string(PyDictObject *mp, PyObject *key, register long hash)
 	PyDictEntry *ep0 = mp->ma_table;
 	register PyDictEntry *ep;
 
+	ACCGC_LOCK(mp->ma_lock);
 	/* Make sure this function doesn't have to handle non-string keys,
 	   including subclasses of str; e.g., one reason to subclass
 	   strings is to override __eq__, and for speed we don't cater to
@@ -402,17 +404,23 @@ lookdict_string(PyDictObject *mp, PyObject *key, register long hash)
 		++converted;
 #endif
 		mp->ma_lookup = lookdict;
-		return lookdict(mp, key, hash);
+		PyDictEntry * result = lookdict(mp, key, hash);
+		ACCGC_UNLOCK(mp->ma_lock);
+		return result;
 	}
 	i = hash & mask;
 	ep = &ep0[i];
-	if (ep->me_key == NULL || ep->me_key == key)
+	if (ep->me_key == NULL || ep->me_key == key){
+		ACCGC_UNLOCK(mp->ma_lock);
 		return ep;
+	}
 	if (ep->me_key == dummy)
 		freeslot = ep;
 	else {
-		if (ep->me_hash == hash && _PyString_Eq(ep->me_key, key))
+		if (ep->me_hash == hash && _PyString_Eq(ep->me_key, key)){
+			ACCGC_UNLOCK(mp->ma_lock);
 			return ep;
+		}
 		freeslot = NULL;
 	}
 
@@ -421,17 +429,22 @@ lookdict_string(PyDictObject *mp, PyObject *key, register long hash)
 	for (perturb = hash; ; perturb >>= PERTURB_SHIFT) {
 		i = (i << 2) + i + perturb + 1;
 		ep = &ep0[i & mask];
-		if (ep->me_key == NULL)
+		if (ep->me_key == NULL){
+			ACCGC_UNLOCK(mp->ma_lock);
 			return freeslot == NULL ? ep : freeslot;
+		}
 		if (ep->me_key == key
 		    || (ep->me_hash == hash
 		        && ep->me_key != dummy
-			&& _PyString_Eq(ep->me_key, key)))
+			&& _PyString_Eq(ep->me_key, key))){
+			ACCGC_UNLOCK(mp->ma_lock);
 			return ep;
+		}
 		if (ep->me_key == dummy && freeslot == NULL)
 			freeslot = ep;
 	}
 	assert(0);	/* NOT REACHED */
+	ACCGC_LOCK(mp->ma_lock);
 	return 0;
 }
 
@@ -522,6 +535,7 @@ dictresize(PyDictObject *mp, Py_ssize_t minused)
 	int is_oldtable_malloced;
 	PyDictEntry small_copy[PyDict_MINSIZE];
 
+	ACCGC_LOCK(mp->ma_lock);
 	assert(minused >= 0);
 
 	/* Find the smallest table size > minused. */
@@ -531,6 +545,7 @@ dictresize(PyDictObject *mp, Py_ssize_t minused)
 		;
 	if (newsize <= 0) {
 		PyErr_NoMemory();
+		ACCGC_UNLOCK(mp->ma_lock);
 		return -1;
 	}
 
@@ -545,6 +560,7 @@ dictresize(PyDictObject *mp, Py_ssize_t minused)
 		if (newtable == oldtable) {
 			if (mp->ma_fill == mp->ma_used) {
 				/* No dummies, so no point doing anything. */
+				ACCGC_UNLOCK(mp->ma_lock);
 				return 0;
 			}
 			/* We're not going to resize it, but rebuild the
@@ -562,6 +578,7 @@ dictresize(PyDictObject *mp, Py_ssize_t minused)
 		newtable = PyMem_NEW(PyDictEntry, newsize);
 		if (newtable == NULL) {
 			PyErr_NoMemory();
+			ACCGC_UNLOCK(mp->ma_lock);
 			return -1;
 		}
 	}
@@ -593,6 +610,7 @@ dictresize(PyDictObject *mp, Py_ssize_t minused)
 
 	if (is_oldtable_malloced)
 		PyMem_DEL(oldtable);
+	ACCGC_UNLOCK(mp->ma_lock);
 	return 0;
 }
 
